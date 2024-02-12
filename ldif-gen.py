@@ -5,7 +5,8 @@
 #
 # Written by: Mark Reynolds (mreynolds@redhat.com)
 #
-# Last Modified: 5/20/2014
+# Created: 5/20/2014
+# Updated: 2/12/2024
 #
 
 import sys
@@ -32,11 +33,11 @@ user_attrs = ['description', 'departmentnumber', 'employeeyype', 'homephone', 'i
 
 # internal list of first and last names in case no "name" files are available
 firstnames = ('Adam', 'Alice', 'Brad', 'Brenda', 'Christopher', 'Christine', 'David', 'Diana',
-              'Mark', 'Matus', 'Fred', 'Felicia', 'Ludwig', 'George', 'Gloria', 'Hank', 'Heather',
-              'Simon',  'Thierry')
-lastnames = ('Smith', 'Johnson', 'Bordaz', 'Krispenz', 'Pichugin', 'Reynolds',
+              'Mark', 'Rob', 'Fred', 'Felicia', 'Ludwig', 'George', 'Gloria', 'Hank', 'Heather',
+              'Simon', 'Julie', 'Thierry', 'Willie')
+lastnames = ('Smith', 'Johnson', 'Bordaz', 'Krispenz', 'Pichugin', 'Reynolds', 'Mosconi',
              'Carter', 'Brown', 'Jenson', 'Mullen', 'Garcia', 'Montbleau', 'Rose', 'Woods',
-             'Salinas', 'Sholl', 'Honek', 'Dugan', 'Griffith', 'Reynolds', 'Richards', 'Key')
+             'Salinas', 'Sholl', 'Crittenden', 'Dugan', 'Griffith', 'Reynolds', 'Richards', 'Key')
 # Misc lists
 area_codes = ("303", "415", "408", "510", "804", "818", "213", "206", "714", "610", "650", "512")
 seqSet = {}
@@ -49,7 +50,7 @@ seqSet = {}
 ceo = {"uid": "ceo", "givenname": "John", "sn": "Budd", "cn": "John Budd", "title": "CEO"}
 
 # Executive Presidents
-ep0 = {"uid": "exec_president0", "givenname": "Paul", "sn": "Grant", "cn": "Paul Grant", "title": "Exective President"}
+ep0 = {"uid": "exec_president0", "givenname": "Paul", "sn": "Grant", "cn": "Paul Grant", "title": "Executive President"}
 ep1 = {"uid": "exec_president1", "givenname": "Jill", "sn": "Peterson", "cn": "Jill Peterson",
            "title": "Exective President"}
 exec_presidents = (ep0, ep1)
@@ -118,7 +119,7 @@ titles = ("Senior", "Master", "Associate", "Junior", "Chief", "Supreme", "Elite"
 orgUnits = ('CEO', 'Executive Presidents', 'Presidents', 'Vice Presidents', 'Directors', 'Managers')
 
 
-def writeOrgUnits(LDIF, suffix):
+def write_org_units(LDIF, suffix):
     for unit in orgUnits:
         LDIF.write('dn: ou=' + unit + ',' + suffix + '\n')
         LDIF.write('objectclass: top\n')
@@ -127,7 +128,7 @@ def writeOrgUnits(LDIF, suffix):
         LDIF.write('\n')
 
 
-def writeOrgEntry(LDIF, suffix, entry):
+def write_org_entry(LDIF, suffix, entry):
     LDIF.write('dn: uid=%s,%s\n' % (entry['uid'], suffix))
     LDIF.write('objectclass: top\n')
     LDIF.write('objectclass: person\n')
@@ -137,19 +138,19 @@ def writeOrgEntry(LDIF, suffix, entry):
     LDIF.write('cn: ' + entry['cn'] + '\n')
     LDIF.write('sn: ' + entry['sn'] + '\n')
     LDIF.write('givenname: ' + entry['givenname'] + '\n')
-    LDIF.write('employeenumber: ' + randomVal("int", 6) + '\n')
-    LDIF.write('homephone: ' + randomVal("tele") + '\n')
+    LDIF.write('employeenumber: ' + get_random_value("int", 6) + '\n')
+    LDIF.write('homephone: ' + get_random_value("tele") + '\n')
     LDIF.write('initials: ' + str(entry['uid'])[:2] + '\n')
-    LDIF.write('telephonenumber: ' + randomVal("tele") + '\n')
-    LDIF.write('facsimiletelephonenumber: ' + randomVal("tele") + '\n')
-    LDIF.write('mobile: ' + randomVal("tele") + '\n')
-    LDIF.write('pager: ' + randomVal("tele") + '\n')
-    LDIF.write('manager: ' + getManager(entry) + '\n')
-    LDIF.write('secretary: ' + randomVal("secretary") + '\n')
-    LDIF.write('roomnumber: ' + randomVal("int", 5) + '\n')
-    LDIF.write('carlicense: ' + randomVal("alpha", 7) + '\n')
-    LDIF.write('l: ' + randomPick(localities) + '\n')
-    LDIF.write('mail: ' + getEmailAddress(entry) + '\n')
+    LDIF.write('telephonenumber: ' + get_random_value("tele") + '\n')
+    LDIF.write('facsimiletelephonenumber: ' + get_random_value("tele") + '\n')
+    LDIF.write('mobile: ' + get_random_value("tele") + '\n')
+    LDIF.write('pager: ' + get_random_value("tele") + '\n')
+    LDIF.write('manager: ' + get_manager(entry) + '\n')
+    LDIF.write('secretary: ' + get_random_value("secretary") + '\n')
+    LDIF.write('roomnumber: ' + get_random_value("int", 5) + '\n')
+    LDIF.write('carlicense: ' + get_random_value("alpha", 7) + '\n')
+    LDIF.write('l: ' + random_pick(localities) + '\n')
+    LDIF.write('mail: ' + get_email_address(entry) + '\n')
     LDIF.write('postaladdress: ' + entry['suffix'] + ' Dept #' + str(random.randomint(1, 25)) + ', Room#' +
                str(random.randomint(1, 1000)) + '\n')
     LDIF.write("usercertificate;binary:: MIIBvjCCASegAwIBAgIBAjANBgkqhkiG9w0BA" +
@@ -164,53 +165,50 @@ def writeOrgEntry(LDIF, suffix, entry):
                "AMBsZePbYx4SrywL0b/OkOmQX+mQwieC2IQzvaBRyaNMh309vrF4w5kExReKfj" +
                "R/gXpHiWQz\n GSxC5LeQG4k3IP34\n")
     LDIF.write('\n')
-    return
 
 
-def writeOrgChart(LDIF, suffix):
+def write_org_chart(LDIF, suffix):
     # Write the organizational units for each org level
-    writeOrgUnits(LDIF, suffix)
+    write_org_units(LDIF, suffix)
 
     # set 'suffix' and 'dnval'
     ceo['suffix'] = suffix
     ceo['dnval'] = ceo['uid']
-    writeOrgEntry(LDIF, 'ou=CEO,' + suffix, ceo)
+    write_org_entry(LDIF, 'ou=CEO,' + suffix, ceo)
 
     for ep in exec_presidents:
         ep['suffix'] = suffix
         ep['dnval'] = ep['uid']
-        writeOrgEntry(LDIF, 'ou=Executive Presidents,' + suffix, ep)
+        write_org_entry(LDIF, 'ou=Executive Presidents,' + suffix, ep)
 
     for p in presidents:
         p['suffix'] = suffix
         p['dnval'] = p['uid']
-        writeOrgEntry(LDIF, 'ou=Presidents,' + suffix, p)
+        write_org_entry(LDIF, 'ou=Presidents,' + suffix, p)
 
     for vp in vice_presidents:
         vp['suffix'] = suffix
         vp['dnval'] = vp['uid']
-        writeOrgEntry(LDIF, 'ou=Vice Presidents,' + suffix, vp)
+        write_org_entry(LDIF, 'ou=Vice Presidents,' + suffix, vp)
 
     for d in directors:
         d['suffix'] = suffix
         d['dnval'] = d['uid']
-        writeOrgEntry(LDIF, 'ou=Directors,' + suffix, d)
+        write_org_entry(LDIF, 'ou=Directors,' + suffix, d)
 
     for m in orgManagers:
         m['suffix'] = suffix
         m['dnval'] = m['uid']
-        writeOrgEntry(LDIF, 'ou=Managers,' + suffix, m)
-
-    return
+        write_org_entry(LDIF, 'ou=Managers,' + suffix, m)
 
 
 #
-# GetManager
+# get_manager
 #
-def getManager(user):
+def get_manager(user):
     if user['createorgchart']:
-        orgIdx = random.randint(0, len(orgManagers) - 1)
-        dn = ('uid=' + orgManagers[orgIdx]['uid'] + ',ou=Managers,' +
+        org_idx = random.randint(0, len(orgManagers) - 1)
+        dn = ('uid=' + orgManagers[org_idx]['uid'] + ',ou=Managers,' +
               user['suffix'])
         return dn
     else:
@@ -223,7 +221,7 @@ def getManager(user):
 #
 # Return an email address based off the user info
 #
-def getEmailAddress(user):
+def get_email_address(user):
     dncomps = user['suffix'].split(',')
     domain = ''
     first = 1
@@ -246,46 +244,46 @@ def getEmailAddress(user):
 #
 # all, alpha, alphanum, int, tele, ssn, secretary
 #
-def randomVal(valType, length=0):
+def get_random_value(val_type, length=0):
     if length:
-        randomLen = length
+        random_len = length
     else:
-        randomLen = random.randint(10, 30)
+        random_len = random.randint(10, 30)
 
-    if valType == 'int':
+    if val_type == 'int':
         if length == 0:
             # get a number that can be long enough to hold a credit number
             length = '9' * 16
         else:
             length = '9' * length
         return str(random.randint(1, int(length)))
-    if valType == 'alpha':
+    if val_type == 'alpha':
         return (''.join((random.choice(random_alpha)
-                for i in range(1, randomLen))))
-    if valType == 'alphanum' or valType == 'all':
+                for i in range(1, random_len))))
+    if val_type == 'alphanum' or val_type == 'all':
         return (''.join((random.choice(random_alphanum)
-                for i in range(randomLen))))
-    if valType == 'tele':
+                for i in range(random_len))))
+    if val_type == 'tele':
         areacode = area_codes[random.randint(0, len(area_codes) - 1)]
         prefix = str(random.randint(100, 999))
         postfix = str(random.randint(1000, 9999))
         return "+1 " + areacode + " " + prefix + "-" + postfix
-    if valType == 'ssn':
+    if val_type == 'ssn':
         one = str(random.randint(0, 900) + 99)
         two = str(random.randint(0, 90) + 9)
         three = str(random.randint(0, 9000) + 999)
         return one + '-' + two + '-' + three
-    if valType == 'secretary':
+    if val_type == 'secretary':
         return ('cn=' + firstnames[random.randint(0, len(firstnames) - 1)] +
                 ' ' + lastnames[random.randint(0, len(lastnames) - 1)])
 
-    return ''.join((random.choice(random_all) for i in xrange(randomLen)))
+    return ''.join((random.choice(random_all) for i in xrange(random_len)))
 
 
 #
 # Return a randomly selection value from the provided list of values
 #
-def randomPick(values):
+def random_pick(values):
     val_count = len(values)
     val_count -= 1
     idx = random.randint(0, val_count)
@@ -293,9 +291,9 @@ def randomPick(values):
 
 
 #
-# Maintian a hash (index position) for each attribute we are using seq sets for
+# Maintain a hash (index position) for each attribute we are using seq sets for
 #
-def seqPick(attr, values):
+def seq_pick(attr, values):
     global seqSet
 
     if attr in seqSet:
@@ -315,29 +313,29 @@ def seqPick(attr, values):
 #
 # Open the output LDIF file
 #
-def openLDIF(fileName):
-    fileOpened = 0
-
-    if fileName:
+def open_ldif(file_name):
+    file_opened = 0
+    LDIF = None
+    if file_name:
         if verbose:
-            print ('Opening LDIF file: ' + fileName)
+            print ('Opening LDIF file: ' + file_name)
         try:
-            LDIF = open(fileName, "w")
+            LDIF = open(file_name, "w")
         except IOError:
-            print ("Can't open file: " + fileName)
+            print ("Can't open file: " + file_name)
             exit(1)
     else:
-        while fileOpened == 0:
-            fileName = input('  Enter output LDIF name [/tmp/out.ldif]: ')
-            if fileName == '':
-                fileName = '/tmp/out.ldif'
+        while file_opened == 0:
+            file_name = input('  Enter output LDIF name [/tmp/out.ldif]: ')
+            if file_name == '':
+                file_name = '/tmp/out.ldif'
             try:
-                LDIF = open(fileName, "w")
-                fileOpened = 1
+                LDIF = open(file_name, "w")
+                file_opened = 1
             except IOError:
-                print ("Can\'t open file: " + fileName)
-                fileName = ''
-    print ('Building LDIF file (%s)...' % fileName)
+                print ("Can\'t open file: " + file_name)
+                file_name = ''
+    print ('Building LDIF file (%s)...' % file_name)
 
     return LDIF
 
@@ -346,10 +344,10 @@ def openLDIF(fileName):
 # Return a number string index
 # zero "padding" allow the entry to work with ldclt
 #
-def getIndex(idx, numUsers):
+def get_index(idx, num_users):
     if padding:
-        zeroLen = len(str(numUsers)) - len(str(idx))
-        index = '0' * zeroLen
+        zero_len = len(str(num_users)) - len(str(idx))
+        index = '0' * zero_len
         index = index + str(idx)
         return index
     else:
@@ -360,18 +358,18 @@ def getIndex(idx, numUsers):
 # Process a list of attribute value pairs.  Check for special keywords, and
 # return the dn
 #
-def processAttrList(LDIF, value_list, index, modldif=False):
+def process_attr_list(LDIF, value_list, index, mod_list=False):
     dn = ''
-    for valuePair in value_list:
-        valuePair = valuePair.rstrip()
-        if valuePair == '':
+    for value_pair in value_list:
+        value_pair = value_pair.rstrip()
+        if value_pair == '':
             break
-        attr_values = valuePair.split(':')
+        attr_values = value_pair.split(':')
         if len(attr_values) > 1:
             attr = attr_values[0].lower()
-            attrVal = attr_values[1].lstrip()
+            attr_value = attr_values[1].lstrip()
             # attr: RANDOM:int:9
-            if attrVal == 'RANDOM':
+            if attr_value == 'RANDOM':
                 # We have a random value, see if the 'type' and 'length' was
                 # provided.
                 # type: all(default), alpha, int
@@ -379,24 +377,24 @@ def processAttrList(LDIF, value_list, index, modldif=False):
                 # description: RANDOM:alpha
                 # description: RANDOM:alpha:10
                 if len(attr_values) == 2:
-                    valuePair = attr + ": " + randomVal("all")
+                    value_pair = attr + ": " + get_random_value("all")
                 elif len(attr_values) == 3:
-                    valuePair = (attr + ": " +
-                                 randomVal(attr_values[2].lstrip()))
+                    value_pair = (attr + ": " +
+                                 get_random_value(attr_values[2].lstrip()))
                 elif len(attr_values) >= 4:
-                    valuePair = (attr + ": " +
-                                 randomVal(attr_values[2].lstrip(),
+                    value_pair = (attr + ": " +
+                                 get_random_value(attr_values[2].lstrip(),
                                            int(attr_values[3].lstrip())))
-            elif attrVal == 'randomPick':
+            elif attr_value == 'random_pick':
                 # Okay we have random values have to gather and select
                 if len(attr_values) > 2:
                     values = attr_values[2].split(';')
-                    valuePair = attr + ": " + randomPick(values)
-            elif attrVal == 'SEQ_SET':
+                    value_pair = attr + ": " + random_pick(values)
+            elif attr_value == 'SEQ_SET':
                 # Okay we have sequential set values to deal with
                 if len(attr_values) > 2:
                     values = attr_values[2].split(';')
-                    valuePair = attr + ": " + seqPick(attr, values)
+                    value_pair = attr + ": " + seq_pick(attr, values)
             if attr in user_attrs:
                 user_attrs.remove(attr)
         else:
@@ -404,20 +402,21 @@ def processAttrList(LDIF, value_list, index, modldif=False):
                   'has no delimeter(:) and hence no value. Skipping...')
             continue
         if index:
-            valuePair = valuePair.replace('#', str(index))
-        if valuePair[0:3] == 'dn:':
-            if modldif:
+            value_pair = value_pair.replace('#', str(index))
+        if value_pair[0:3] == 'dn:':
+            if mod_list:
                 LDIF.write('changetype: add\n')
-            dn = valuePair
+            dn = value_pair
 
-        LDIF.write(valuePair + "\n")
+        LDIF.write(value_pair + "\n")
     return dn
 
 
 #
 # Read the tempalte file and store the template in the entry
 #
-def readTemplate(entry, member):
+def read_template(entry, member):
+    LDIF = None
     if member:
         if verbose:
             print ('Opening template file: ' + entry['member_template_file'])
@@ -440,100 +439,95 @@ def readTemplate(entry, member):
         entry['template'] = list(LDIF)
 
     LDIF.close()
-    return
 
 
 #
 # Write the group template entries to LDIF
 #
-def writeGroupTemplate(LDIF, idx, group):
-    group_index = getIndex(idx, group['entries'])
-    dn = processAttrList(LDIF, group['template'], group_index)
+def write_group_template(LDIF, idx, group):
+    group_index = get_index(idx, group['entries'])
+    dn = process_attr_list(LDIF, group['template'], group_index)
 
     # Add members to the group
-    memberIdx = 1
-    while memberIdx <= int(group['members']):
+    member_idx = 1
+    while member_idx <= int(group['members']):
         if 'member_template' in group:
-            memberValue = \
+            member_value = \
                 group['member_template'][0].rstrip().replace('dn: ', '')
-            #memberValue = memberValue.rstrip()
+            #member_value = member_value.rstrip()
             if group['create_unique_members']:
                 index = ('_' + str(idx) + '_' +
-                         getIndex(memberIdx, group['members']))
+                         get_index(member_idx, group['members']))
             else:
-                index = getIndex(memberIdx, group['members'])
-            memberValue = memberValue.replace('#', index)
-            mdn = "%s: %s\n" % (group['member_attr'], memberValue)
+                index = get_index(member_idx, group['members'])
+            member_value = member_value.replace('#', index)
+            mdn = "%s: %s\n" % (group['member_attr'], member_value)
             LDIF.write(mdn)
         else:
-            memberValue = group['member_name']
+            member_value = group['member_name']
             if group['create_unique_members']:
-                memberValue = memberValue + '_' + str(idx) + '_'
+                member_value = member_value + '_' + str(idx) + '_'
             mdn = "%s: %s=%s%s,%s\n" % (group['member_attr'],
                                         group['member_rdn'],
-                                        memberValue,
-                                        getIndex(memberIdx, group['members']),
+                                        member_value,
+                                        get_index(member_idx, group['members']),
                                         group['member_parent'])
             LDIF.write(mdn)
         if verbose:
-            print ('Adding ' + group['member_attr'] + ': ' + memberValue +
+            print ('Adding ' + group['member_attr'] + ': ' + member_value +
                    '...')
-        memberIdx += 1
+        member_idx += 1
     if verbose:
         print ('Created group: ' + dn.replace('dn: ', ''))
     LDIF.write('\n')
-
-    return
 
 
 #
 # Write the template entries to LDIF
 #
-def writeTemplate(LDIF, idx, entry, member=0, memberIdx=0, modldif=False):
+def write_template(LDIF, idx, entry, member=0, member_idx=0, mod_list=False):
     # Start parsing the list
     #
     # Check for key words:  RANDOM, RANDOM-INT
     # Check for selection of random values: RANDOM-PICK: VALUE, VALUE, VALUE
     #
     if member:
-        tmplEntry = entry['member_template']
+        template_entry = entry['member_template']
     else:
-        tmplEntry = entry['template']
+        template_entry = entry['template']
 
-    entry_index = getIndex(idx, entry['entries'])
-    dn = processAttrList(LDIF, tmplEntry, entry_index, modldif)
+    entry_index = get_index(idx, entry['entries'])
+    dn = process_attr_list(LDIF, template_entry, entry_index, mod_list)
     LDIF.write('\n')
     if verbose:
         print ('Created entry: ' + dn.replace('dn: ', ''))
 
-    return
 
-
-def writeParentEntry(LDIF, dn, skipAci):
+def write_parent_entry(LDIF, dn, skip_aci):
     LDIF.write('dn: ' + dn + '\n')
     LDIF.write('objectclass: top\n')
 
-    dnParts = dn.split('=')
-    dnValues = dnParts[1].split(',')
-    if dnParts[0] == 'o':
+    dn_parts = dn.split('=')
+    dn_values = dn_parts[1].split(',')
+    if dn_parts[0] == 'o':
         LDIF.write('objectclass: organization\n')
-        LDIF.write('o: ' + dnValues[0] + '\n')
-    elif dnParts[0] == 'dc':
+        LDIF.write('o: ' + dn_values[0] + '\n')
+    elif dn_parts[0] == 'dc':
         LDIF.write('objectclass: domain\n')
-        LDIF.write('dc: ' + dnValues[0] + '\n')
-    elif dnParts[0] == 'ou':
+        LDIF.write('dc: ' + dn_values[0] + '\n')
+    elif dn_parts[0] == 'ou':
         LDIF.write('objectclass: organizationalUnit\n')
-        LDIF.write('ou: ' + dnValues[0] + '\n')
-    elif dnParts[0] == 'cn':
+        LDIF.write('ou: ' + dn_values[0] + '\n')
+    elif dn_parts[0] == 'cn':
         LDIF.write('objectclass: organizationalUnit\n')
-        LDIF.write('ou: ' + dnValues[0] + '\n')
-        LDIF.write('cn: ' + dnValues[0] + '\n')
+        LDIF.write('ou: ' + dn_values[0] + '\n')
+        LDIF.write('cn: ' + dn_values[0] + '\n')
     else:
         LDIF.write('objectclass: extensibleObject\n')
-        LDIF.write(dnParts[0] + ': ' + dnValues[0] + '\n')
+        LDIF.write(dn_parts[0] + ': ' + dn_values[0] + '\n')
 
     # add a default aci's
-    if not skipAci:
+    if not skip_aci:
         LDIF.write('aci: (target=ldap:///' + dn + ')(targetattr=*)(version ' +
                    '3.0; acl "Self Write ACI for ' + dn + '"; allow(write) ' +
                    'userdn = "ldap:///self";)\n')
@@ -553,115 +547,112 @@ def writeParentEntry(LDIF, dn, skipAci):
 #
 # Write the parent entry, up to and including the base suffix
 #
-def writeParent(LDIF, parentDN, suffixDN, skipAci, createChart):
+def write_parent(LDIF, parent_dn, suffix_dn, skip_aci, create_chart):
     # do some basic normalization
-    parentDN = parentDN.replace(' ,', ',')
-    parentDN = parentDN.replace(', ', ',')
-    parentDN.lower()
-    suffixDN = suffixDN.replace(' ,', ',')
-    suffixDN = suffixDN.replace(', ', ',')
-    suffixDN.lower()
-    subsuffix = ''
+    parent_dn = parent_dn.replace(' ,', ',')
+    parent_dn = parent_dn.replace(', ', ',')
+    parent_dn.lower()
+    suffix_dn = suffix_dn.replace(' ,', ',')
+    suffix_dn = suffix_dn.replace(', ', ',')
+    suffix_dn.lower()
 
-    if parentDN != suffixDN:
-        suffixParts = suffixDN.split(',')
-        parentParts = parentDN.split(',')
-        suffixLen = len(suffixParts)
-        parentLen = len(parentParts)
+    if parent_dn != suffix_dn:
+        suffix_parts = suffix_dn.split(',')
+        parent_parts = parent_dn.split(',')
+        suffix_len = len(suffix_parts)
+        parent_len = len(parent_parts)
 
-        position = len(parentDN) - len(suffixDN)
-        if parentDN[position:] != suffixDN:
+        position = len(parent_dn) - len(suffix_dn)
+        if parent_dn[position:] != suffix_dn:
             print (('The parent DN (%s) and the suffix DN (%s) ' %
-                   (parentDN, suffixDN)) + 'are not compatible.  ' +
+                   (parent_dn, suffix_dn)) + 'are not compatible.  ' +
                    'Exiting...')
             LDIF.close()
             exit(1)
 
-        if (parentLen - suffixLen) == 1:
-            writeParentEntry(LDIF, suffixDN, skipAci)
-            if not skipAci:
+        if (parent_len - suffix_len) == 1:
+            write_parent_entry(LDIF, suffix_dn, skip_aci)
+            if not skip_aci:
                 # we only need to write the default ACI's once
-                skipAci = True
-        elif (parentLen - suffixLen) > 1:
+                skip_aci = True
+        elif (parent_len - suffix_len) > 1:
             # Write the suffix
-            writeParentEntry(LDIF, suffixDN, skipAci)
-            if not skipAci:
+            write_parent_entry(LDIF, suffix_dn, skip_aci)
+            if not skip_aci:
                 # we only need to write the default ACI's once
-                skipAci = True
+                skip_aci = True
 
             # Write the filler branches between the suffix and parent DN's
             while True:
                 # strip off the top branch
-                parentParts = parentParts[1:]
+                parent_parts = parent_parts[1:]
 
                 # build the DN
                 subsuffix = ''
-                for comp in parentParts:
+                for comp in parent_parts:
                     subsuffix = subsuffix + comp + ','
 
                 # remove the last comma
                 subsuffix = subsuffix[:-1]
-                if subsuffix == suffixDN:
+                if subsuffix == suffix_dn:
                     # we're done
                     break
-                writeParentEntry(LDIF, subsuffix, True)
+                write_parent_entry(LDIF, subsuffix, True)
 
-        elif suffixLen == parentLen:
-            # the dn's are the same legnth, but do not match!
+        elif suffix_len == parent_len:
+            # the dn's are the same length, but do not match!
             print (('The parent DN (%s) and the suffix DN (%s) ' %
-                   (parentDN, suffixDN)) + 'are not compatible.  ' +
+                   (parent_dn, suffix_dn)) + 'are not compatible.  ' +
                    'Exiting...')
             LDIF.close()
             exit(1)
         else:
             print ("we should not be here!!")
-    writeParentEntry(LDIF, parentDN, skipAci)
-    if createChart:
-        writeOrgChart(LDIF, suffixDN)
-
-    return
+    write_parent_entry(LDIF, parent_dn, skip_aci)
+    if create_chart:
+        write_org_chart(LDIF, suffix_dn)
 
 
 #
 # Write the default entry attributes to the LDIF entry
 #
-def writeUserDefaultAttrs(LDIF, user):
+def write_user_default_attrs(LDIF, user):
     for attr in user_attrs:
         if attr == 'description':
             LDIF.write(attr + ': Description for ' + user['name'] + '\n')
         elif attr == 'employeenumber':
-            LDIF.write(attr + ': ' + randomVal("int", 6) + '\n')
+            LDIF.write(attr + ': ' + get_random_value("int", 6) + '\n')
         elif attr == 'homephone':
-            LDIF.write(attr + ': ' + randomVal("tele") + '\n')
+            LDIF.write(attr + ': ' + get_random_value("tele") + '\n')
         elif attr == 'initials':
             LDIF.write(attr + ': ' + str(user['uid'])[:2] + '\n')
         elif attr == 'telephonenumber':
-            LDIF.write(attr + ': ' + randomVal("tele") + '\n')
+            LDIF.write(attr + ': ' + get_random_value("tele") + '\n')
         elif attr == 'facsimiletelephonenumber':
-            LDIF.write(attr + ': ' + randomVal("tele") + '\n')
+            LDIF.write(attr + ': ' + get_random_value("tele") + '\n')
         elif attr == 'mobile':
-            LDIF.write(attr + ': ' + randomVal("tele") + '\n')
+            LDIF.write(attr + ': ' + get_random_value("tele") + '\n')
         elif attr == 'pager':
-            LDIF.write(attr + ': ' + randomVal("tele") + '\n')
+            LDIF.write(attr + ': ' + get_random_value("tele") + '\n')
         elif attr == 'manager':
-            LDIF.write(attr + ': ' + getManager(user) + '\n')
+            LDIF.write(attr + ': ' + get_manager(user) + '\n')
         elif attr == 'secretary':
-            LDIF.write(attr + ': ' + randomVal("secretary") + ',' +
+            LDIF.write(attr + ': ' + get_random_value("secretary") + ',' +
                        user['suffix'] + '\n')
         elif attr == 'roomnumber':
-            LDIF.write(attr + ': ' + randomVal("int", 5) + '\n')
+            LDIF.write(attr + ': ' + get_random_value("int", 5) + '\n')
         elif attr == 'carlicense':
-            LDIF.write(attr + ': ' + randomVal("alpha", 7) + '\n')
+            LDIF.write(attr + ': ' + get_random_value("alpha", 7) + '\n')
         elif attr == 'l':
-            LDIF.write(attr + ': ' + randomPick(localities) + '\n')
+            LDIF.write(attr + ': ' + random_pick(localities) + '\n')
         elif attr == 'mail':
-            LDIF.write(attr + ': ' + getEmailAddress(user) + '\n')
+            LDIF.write(attr + ': ' + get_email_address(user) + '\n')
         elif attr == 'postaladdress':
             LDIF.write(attr + ': ' + user['suffix'] + ' Dept #' +
                        str(random.randomint(1, 25)) + ', Room#' +
                        str(random.randomint(1, 1000)) + '\n')
         elif attr == 'title':
-            LDIF.write(attr + ': ' + randomPick(titles) + '\n')
+            LDIF.write(attr + ': ' + random_pick(titles) + '\n')
         elif attr == 'usercertificate;binary':
             LDIF.write("usercertificate;binary:: MIIBvjCCASegAwIBAgIBAjANBgk" +
                        "qhkiG9w0BAQQFADAnMQ8wDQYD\n VQQDEwZjb25maWcxFDASBgNV" +
@@ -676,22 +667,26 @@ def writeUserDefaultAttrs(LDIF, user):
                        "kCCkNeHJoqGN4NWjTdnBcGaAr5Y85k1\n o/vOAMBsZePbYx4Sry" +
                        "wL0b/OkOmQX+mQwieC2IQzvaBRyaNMh309vrF4w5kExReKfjR/gX" +
                        "pHiWQz\n GSxC5LeQG4k3IP34\n")
-    # test ssn
-    #LDIF.write('ssn: ' + randomVal('ssn') + '\n')
 
 
 #
 # Build a DN value, make it "unnormalized" if so requested.
 # Return the DN and the new rdn value
 #
-def getDN(rdn, name, parent, unnorm):
+def get_dn(rdn, name, parent, unnorm):
     if unnorm:
         return (rdn.upper() + ' =  ' + name +
                 '\"cN=unNormaL, ou=iZED\, z="\,  ,   ' +
                 parent), (name + '\"cN=unNormaL, ou=iZED\, z="\,')
     else:
-        return (rdn + '=' + name + ',' + parent), (name)
+        return (rdn + '=' + name + ',' + parent), name
 
+#
+# Get the domain from the suffix
+#
+def get_domain(suffix):
+    dc_parts = suffix.split(',')
+    return  '.'.join([part.replace('dc=', '') for part in dc_parts])
 
 #
 # Bloat the entry size
@@ -699,40 +694,230 @@ def getDN(rdn, name, parent, unnorm):
 # If the entry is not are large as the requested size then increase it.
 # Use multiple description attributes
 #
-def bloatEntry(LDIF, finalSize):
-    curSize = LDIF.tell()
-    if curSize + 15 < finalSize:
-        remainder = finalSize - curSize
+def bloat_entry(LDIF, final_size):
+    curr_size = LDIF.tell()
+    if curr_size + 15 < final_size:
+        remainder = final_size - curr_size
         while remainder:
             if remainder > 1024:
-                LDIF.write('description: ' + randomVal('alphanum', 1010) +
+                LDIF.write('description: ' + get_random_value('alphanum', 1010) +
                            '\n')
                 remainder -= 1024
             else:
                 LDIF.write('description: ' +
-                           randomVal('alphanum', (remainder - 15)) + '\n')
+                           get_random_value('alphanum', (remainder - 15)) + '\n')
                 remainder = 0
+
+#
+# Write IPA User entries to LDIF
+#
+def write_ipa_users(LDIF, user):
+    idx = 1
+    user['parent'] = 'cn=users,cn=accounts,' + user['suffix']
+
+    while idx <= int(user['entries']):
+        if not user['name']:
+            # Use real names
+            user['givenname'] = random_pick(firstnames)
+            user['sn'] = random_pick(lastnames)
+            user['cn'] = user['givenname'] + ' ' + user['sn']
+            user['uid'] = user['givenname'][0] + user['sn'] + str(idx)
+            user['dnval'] = user['uid']
+        else:
+            # Use ldclt naming convention
+            user['givenname'] = get_random_value("alpha")
+            user['sn'] = get_random_value("alpha")
+            user['cn'] = user['givenname'] + ' ' + user['sn']
+            user['uid'] = user['name'] + get_index(idx, user['entries'])
+            user['dnval'] = user['uid']
+
+        (name_dn, rdn) = get_dn('uid', user['dnval'], user['parent'],
+                              user['unnorm'])
+
+        # Write the entry
+        LDIF.write(f'dn: {name_dn}\n')
+        # objectclasses
+        LDIF.write('objectclass: top\n')
+        LDIF.write('objectclass: person\n')
+        LDIF.write('objectclass: inetorgperson\n')
+        LDIF.write('objectclass: organizationalPerson\n')
+        LDIF.write('objectclass: inetUser\n')
+        LDIF.write('objectclass: posixaccount\n')
+        LDIF.write('objectclass: krbprincipalaux\n')
+        LDIF.write('objectclass: krbticketpolicyaux\n')
+        LDIF.write('objectclass: ipaobject\n')
+        LDIF.write('objectclass: ipasshuser\n')
+        LDIF.write('objectclass: ipaSshGroupOfPubKeys\n')
+        LDIF.write('objectclass: mepOriginEntry\n')
+        # LDIF.write('objectClass: ipantuserattrs\n')
+        # attrs
+        LDIF.write(f"uid: {user['uid']}\n")
+        LDIF.write(f"cn: {user['cn']}\n")
+        LDIF.write(f"sn: {user['sn']}\n")
+        LDIF.write(f"givenname: {user['givenname']}\n")
+        # posix attrs
+        LDIF.write(f"displayName: {user['cn']}\n")
+        LDIF.write(f"initials: {str(user['uid'])[:2].upper()}\n")
+        LDIF.write(f"gecos: {user['cn']}\n")
+        LDIF.write(f"loginShell: /bin/sh\n")
+        LDIF.write(f"homeDirectory: /home/{user['uid']}\n")
+        LDIF.write(f"uidNumber: {(idx + 1)}\n")
+        LDIF.write(f"gidNumber: {(idx + 1)}\n")
+        LDIF.write(f"mail: {user['uid']}@{get_domain(user['suffix'])}\n")
+        realm = get_domain(user['suffix']).upper()
+        LDIF.write(f"krbPrincipalName: {user['uid']}@{realm}\n")
+        LDIF.write(f"krbCanonicalName: {user['uid']}@{realm}\n")
+        if user['passwd'] == '':
+            passwd = user['dnval']
+        else:
+            passwd = user['passwd']
+        LDIF.write(f'userpassword: {passwd}\n')
+
+        # custom values
+        process_attr_list(LDIF, user['schema'], idx)
+
+        if verbose:
+            print('Created IPA user entry: ' + name_dn)
+        LDIF.write('\n')
+
+        idx += 1
+
+
+#
+# Interactive IPA User Entry Creation
+#
+def create_ipa_users():
+    global padding
+    user = {
+        'schema': [],
+        'create_parent': False,
+        'createorgchart': False,
+        'skip_aci': True,
+        'unnorm': False
+    }
+
+    print ('\nCreate Users')
+
+    user['entries'] = 'invalid'
+    while not user['entries'].isdigit():
+        user['entries'] = input('  Number of user entries [10000]: ')
+        if user['entries'] == '':
+            user['entries'] = '10000'
+
+    user['name'] = input('  Enter user name or press ENTER to use ' +
+                         '"real names": ')
+
+    user['passwd'] = input('  Enter userpassword value (default is the ' +
+                               'user\'s "uid" value): ')
+
+    user['suffix'] = input('  Enter base suffix DN [dc=example,dc=com]: ')
+    if user['suffix'] == '':
+        user['suffix'] = 'dc=example,dc=com'
+
+    custom_schema = input('  Add additional attributes [n]: ')
+    if custom_schema == 'y':
+        print ('    Enter \"attribute: value\", press Enter when finished.  ')
+        while True:
+            value_pair = input('    Attr/Value: ')
+            if value_pair == '':
+                break
+            user['schema'].append(value_pair)
+
+    user['size'] = 0
+
+    LDIF = open_ldif(None)
+    write_ipa_users(LDIF, user)
+    LDIF.close()
+    print ('Done.')
+
+
+def write_ipa_hosts(LDIF, host):
+    domain_comps = host['fqdn'].split('.')
+    hostname = domain_comps.pop(0)
+    domain = '.'.join(domain_comps)
+    idx = 1
+    while idx <= int(host['entries']):
+        # Write the entry
+        host_name = hostname + str(idx)
+        fqdn = f"{host_name}.{domain}"
+        LDIF.write(f"dn: fqdn={fqdn},cn=computers,cn=accounts,{host['suffix']}\n")
+        LDIF.write('objectClass: top\n')
+        LDIF.write('objectClass: ipaobject\n')
+        LDIF.write('objectClass: nshost\n')
+        LDIF.write('objectClass: ipahost\n')
+        LDIF.write('objectClass: ipaservice\n')
+        LDIF.write('objectClass: pkiuser\n')
+        LDIF.write('objectClass: krbprincipalaux\n')
+        LDIF.write('objectClass: krbprincipal\n')
+        LDIF.write('objectClass: krbticketpolicyaux\n')
+        LDIF.write('objectClass: ipasshhost\n')
+        LDIF.write('objectClass: ipaSshGroupOfPubKeys\n')
+        LDIF.write(f"fqdn: {fqdn}\n")
+        LDIF.write(f"cn: {fqdn}\n")
+        LDIF.write(f"serverHostName: {host_name}\n")
+        realm = get_domain(host['suffix']).upper()
+        LDIF.write(f"krbPrincipalName: host/{fqdn}@{realm}\n")
+        LDIF.write(f"krbCanonicalName: host/{fqdn}@{realm}\n")
+        # process custom attributes
+        process_attr_list(LDIF, host['schema'], idx)
+
+        if verbose:
+            print('Created host entry: ' + name_dn)
+        LDIF.write('\n')
+        idx += 1
+
+
+def create_ipa_hosts():
+    print('\nCreate Users')
+    host = {
+        'schema': [],
+        'entries': 'invalid'
+    }
+    while not host['entries'].isdigit():
+        host['entries'] = input('  Number of host entries [1000]: ')
+        if host['entries'] == '':
+            host['entries'] = '1000'
+
+    host['fqdn'] = input('  Enter FQDN: ')
+
+    host['suffix'] = input('  Enter base suffix DN [dc=example,dc=com]: ')
+    if host['suffix'] == '':
+        host['suffix'] = 'dc=example,dc=com'
+
+    custom_schema = input('  Add additional attributes [n]: ')
+    if custom_schema == 'y':
+        print ('    Enter \"attribute: value\", press Enter when finished.  ')
+        while True:
+            value_pair = input('    Attr/Value: ')
+            if value_pair == '':
+                break
+            host['schema'].append(value_pair)
+
+    LDIF = open_ldif(None)
+    write_ipa_hosts(LDIF, host)
+    LDIF.close()
+    print ('Done.')
 
 
 #
 # Write user entries to LDIF
 #
-def writeUsers(LDIF, user, modldif=False):
+def write_users(LDIF, user, mod_list=False):
     idx = 1
 
     if user['create_parent']:
-        writeParent(LDIF, user['parent'], user['suffix'], user['skipaci'],
+        write_parent(LDIF, user['parent'], user['suffix'], user['skip_aci'],
                     user['createorgchart'])
 
     while idx <= int(user['entries']):
         if 'template' in user:
-            writeTemplate(LDIF, idx, user, 0, 0, modldif)
+            write_template(LDIF, idx, user, 0, 0, mod_list)
         else:
-            printRdn = False
+            print_rdn = False
             if not user['name']:
                 # Use real names
-                user['givenname'] = randomPick(firstnames)
-                user['sn'] = randomPick(lastnames)
+                user['givenname'] = random_pick(firstnames)
+                user['sn'] = random_pick(lastnames)
                 user['cn'] = user['givenname'] + ' ' + user['sn']
                 user['uid'] = str(user['givenname'])[:1] + str(user['sn'])[:]
                 if user['rdn'] == 'cn':
@@ -742,24 +927,24 @@ def writeUsers(LDIF, user, modldif=False):
                     user['uid'] = user['uid'] + str(idx)
                     user['dnval'] = user['uid']
                 else:
-                    printRdn = True
+                    print_rdn = True
                     user['dnval'] = user['uid'] + str(idx)
             else:
                 # Use ldclt naming convention
-                user['givenname'] = randomVal("alpha")
-                user['sn'] = randomVal("alpha")
+                user['givenname'] = get_random_value("alpha")
+                user['sn'] = get_random_value("alpha")
                 user['cn'] = user['givenname'] + ' ' + user['sn']
-                user['uid'] = user['name'] + getIndex(idx, user['entries'])
+                user['uid'] = user['name'] + get_index(idx, user['entries'])
                 if user['rdn'] == 'cn':
-                    user['cn'] = user['cn'] + getIndex(idx, user['entries'])
+                    user['cn'] = user['cn'] + get_index(idx, user['entries'])
                     user['dnval'] = user['cn']
                 elif user['rdn'] == 'uid':
                     user['dnval'] = user['uid']
                 else:
-                    printRdn = True
+                    print_rdn = True
                     user['dnval'] = user['uid'] + str(idx)
 
-            (nameDN, rdn) = getDN(user['rdn'], user['dnval'], user['parent'],
+            (name_dn, rdn) = get_dn(user['rdn'], user['dnval'], user['parent'],
                                   user['unnorm'])
             if user['rdn'] == 'cn':
                     user['cn'] = rdn
@@ -767,54 +952,53 @@ def writeUsers(LDIF, user, modldif=False):
                     user['uid'] = rdn
 
             # Write the entry
-            LDIF.write('dn: ' + nameDN + '\n')
-            if modldif:
+            LDIF.write('dn: ' + name_dn + '\n')
+            if mod_list:
                 LDIF.write('changetype: add\n')
             LDIF.write('objectclass: top\n')
             LDIF.write('objectclass: person\n')
             LDIF.write('objectclass: inetorgperson\n')
             LDIF.write('objectclass: organizationalPerson\n')
             LDIF.write('objectclass: inetUser\n')
-            if printRdn:
+            if print_rdn:
                 LDIF.write(user['rdn'] + ": " + rdn + '\n')
             LDIF.write('uid: ' + user['uid'] + '\n')
             LDIF.write('cn: ' + user['cn'] + '\n')
             LDIF.write('sn: ' + user['sn'] + '\n')
             LDIF.write('givenname: ' + user['givenname'] + '\n')
-            processAttrList(LDIF, user['schema'], idx)
+            process_attr_list(LDIF, user['schema'], idx)
 
             # write the remaining default attribute
-            writeUserDefaultAttrs(LDIF, user)
+            write_user_default_attrs(LDIF, user)
             if user['passwd'] == '':
                 passwd = user['dnval']
             else:
                 passwd = user['passwd']
-            #LDIF.write('userpassword: ' + passwd + '\n')
+            LDIF.write('userpassword: ' + passwd + '\n')
 
-            # bloat the entry size if reqeusted
+            # bloat the entry size if requested
             if user['size']:
-                bloatEntry(LDIF, int(user['size']))
+                bloat_entry(LDIF, int(user['size']))
 
             if verbose:
-                print ('Created user entry: ' + nameDN)
+                print ('Created user entry: ' + name_dn)
             LDIF.write('\n')
 
         idx += 1
-
-    return
 
 
 #
 # Interactive User Entry Creation
 #
-def createUsers():
+def create_users():
     global padding
-    user = {}
-    user['schema'] = []
-    user['create_parent'] = False
-    user['createorgchart'] = False
-    user['skipaci'] = True
-    user['unnorm'] = False
+    user = {
+        'schema': [],
+        'create_parent': False,
+        'createorgchart': False,
+        'skip_aci': True,
+        'unnorm': False
+    }
 
     print ('\nCreate Users')
 
@@ -855,44 +1039,43 @@ def createUsers():
         user['create_parent'] = True
         answer = input('  Add default ACI\'s to parent entry [y]: ')
         if answer == 'y':
-            user['skipaci'] = False
+            user['skip_aci'] = False
 
     answer = input('  Create organization chart [n]: ')
     if answer == 'y':
         user['createorgchart'] = True
         user['create_parent'] = True
 
-    customSchema = input('  Add additional attributes [n]: ')
-    if customSchema == 'y':
+    custom_schema = input('  Add additional attributes [n]: ')
+    if custom_schema == 'y':
         print ('    Enter \"attribute: value\", press Enter when finished.  ')
         while True:
-            valuePair = input('    Attr/Value: ')
-            if valuePair == '':
+            value_pair = input('    Attr/Value: ')
+            if value_pair == '':
                 break
-            user['schema'].append(valuePair)
+            user['schema'].append(value_pair)
 
-    user['size'] = 'empty'
-    while not user['size'].isdigit():
-        user['size'] = input('  Enter entry size(in bytes) or press ' +
-                                 'ENTER for default size: ')
+    user['size'] = -1
+    while user['size'] < 0:
+        user['size'] = int(input('  Enter entry size(in bytes) or press ' +
+                                 'ENTER for default size: '))
         if user['size'] == '':
             user['size'] = 0
             break
 
-    LDIF = openLDIF(None)
-    writeUsers(LDIF, user)
+    LDIF = open_ldif(None)
+    write_users(LDIF, user)
     LDIF.close()
     print ('Done.')
-    return
 
 
-def writeNested(LDIF, user):
+def write_nested(LDIF, user):
     entry_pool = int(user['entries'])
     entry_count = 0
     cont_count = 0;
 
     if user['create_parent']:
-        writeParent(LDIF, user['suffix'], user['suffix'], user['skipaci'],
+        write_parent(LDIF, user['suffix'], user['suffix'], user['skip_aci'],
                     user['createorgchart'])
 
     while entry_count < entry_pool:
@@ -922,8 +1105,8 @@ def writeNested(LDIF, user):
                     break
                 if not user['name']:
                     # Use real names
-                    user['givenname'] = randomPick(firstnames)
-                    user['sn'] = randomPick(lastnames)
+                    user['givenname'] = random_pick(firstnames)
+                    user['sn'] = random_pick(lastnames)
                     user['cn'] = user['givenname'] + ' ' + user['sn']
                     user['uid'] = str(user['givenname'])[:1] + str(user['sn'])[:]
                     if user['rdn'] == 'cn':
@@ -933,31 +1116,29 @@ def writeNested(LDIF, user):
                         user['uid'] = user['uid'] + str(idx)
                         user['dnval'] = user['uid']
                     else:
-                        printRdn = True
                         user['dnval'] = user['uid'] + str(idx)
                 else:
                     # Use ldclt naming convention
-                    user['givenname'] = randomVal("alpha")
-                    user['sn'] = randomVal("alpha")
+                    user['givenname'] = get_random_value("alpha")
+                    user['sn'] = get_random_value("alpha")
                     user['cn'] = user['givenname'] + ' ' + user['sn']
-                    user['uid'] = user['name'] + getIndex(idx, user['entries'])
+                    user['uid'] = user['name'] + get_index(idx, user['entries'])
                     if user['rdn'] == 'cn':
-                        user['cn'] = user['cn'] + getIndex(idx, user['entries'])
+                        user['cn'] = user['cn'] + get_index(idx, user['entries'])
                         user['dnval'] = user['cn']
                     elif user['rdn'] == 'uid':
                         user['dnval'] = user['uid']
                     else:
-                        printRdn = True
                         user['dnval'] = user['uid'] + str(idx)
 
-                (nameDN, rdn) = getDN(user['rdn'], user['dnval'], container_dn,
+                (name_dn, rdn) = get_dn(user['rdn'], user['dnval'], container_dn,
                                       user['unnorm'])
                 if user['rdn'] == 'cn':
                         user['cn'] = rdn
                 elif user['rdn'] == 'uid':
                         user['uid'] = rdn
 
-                LDIF.write('dn: ' + nameDN + '\n')
+                LDIF.write('dn: ' + name_dn + '\n')
                 LDIF.write('objectclass: top\n')
                 LDIF.write('objectclass: person\n')
                 LDIF.write('objectclass: inetorgperson\n')
@@ -967,22 +1148,23 @@ def writeNested(LDIF, user):
                 LDIF.write('cn: ' + user['cn'] + '\n')
                 LDIF.write('sn: ' + user['sn'] + '\n')
                 LDIF.write('givenname: ' + user['givenname'] + '\n')
-                writeUserDefaultAttrs(LDIF, user)
+                write_user_default_attrs(LDIF, user)
                 LDIF.write('\n')
 
                 entry_count += 1
     print("Created {} entries...".format(entry_count))
 
 
-def createNestedLDIF():
+def create_nested_ldif():
     global padding
-    user = {}
-    user['schema'] = []
-    user['create_parent'] = True
-    user['createorgchart'] = False
-    user['skipaci'] = True
-    user['unnorm'] = False
-    user['size'] = 0
+    user = {
+        'schema': [],
+        'create_parent': True,
+        'createorgchart': False,
+        'skip_aci': True,
+        'unnorm': False,
+        'size': 0
+    }
 
     print ('\nCreate Users')
 
@@ -1007,60 +1189,59 @@ def createNestedLDIF():
     if user['suffix'] == '':
         user['suffix'] = 'dc=example,dc=com'
 
-    LDIF = openLDIF(None)
-    writeNested(LDIF, user)
+    LDIF = open_ldif(None)
+    write_nested(LDIF, user)
     LDIF.close()
     print ('Done.')
-    return
 
 
 #
 # Write group entries and members to LDIF
 #
-def writeGroup(LDIF, group):
+def write_group(LDIF, group):
     idx = 1
-    memberIdx = 1
-    nameDN = ''
-    wroteACI = 0
+    member_idx = 1
+    wrote_aci = 0
 
-    if not LDIF:
-        LDIF = openLDIF(None)
+    if LDIF is None:
+        LDIF = open_ldif(None)
 
     if group['create_parent']:
-        writeParent(LDIF, group['parent'], group['suffix'], group['skipaci'],
+        write_parent(LDIF, group['parent'], group['suffix'], group['skip_aci'],
                     False)
-        wroteACI = 1
+        wrote_aci = 1
     if group['member_parent'] != group['parent'] and \
        group['create_member_parent']:
-        if wroteACI:
-            writeParent(LDIF, group['member_parent'], group['suffix'], True,
+        if wrote_aci:
+            write_parent(LDIF, group['member_parent'], group['suffix'], True,
                         False)
         else:
-            writeParent(LDIF, group['member_parent'], group['suffix'],
-                        group['skipaci'], False)
+            write_parent(LDIF, group['member_parent'], group['suffix'],
+                        group['skip_aci'], False)
 
     # Now we create the same members
     if not group['create_unique_members']:
         if not 'member_template' in group:
             if group['create_members']:
-                user = {}
-                user['suffix'] = group['suffix']
-                user['schema'] = group['member_schema']
-                user['name'] = group['member_name']
-                user['parent'] = group['member_parent']
-                user['rdn'] = group['member_rdn']
-                user['passwd'] = group['member_passwd']
-                user['entries'] = group['members']
-                user['unnorm'] = False
-                user['createorgchart'] = False
-                user['size'] = 0
-                user['create_parent'] = False  # This was already done above
-                writeUsers(LDIF, user)
+                user = {
+                    'suffix': group['suffix'],
+                    'schema': group['member_schema'],
+                    'name': group['member_name'],
+                    'parent': group['member_parent'],
+                    'rdn': group['member_rdn'],
+                    'passwd': group['member_passwd'],
+                    'entries': group['members'],
+                    'unnorm': False,
+                    'createorgchart': False,
+                    'size': 0,
+                    'create_parent': False
+                }
+                write_users(LDIF, user)
         else:
             # member template supplied, so we assume we want to create members
-            while memberIdx <= int(group['members']):
-                writeTemplate(LDIF, memberIdx, group, 1)
-                memberIdx += 1
+            while member_idx <= int(group['members']):
+                write_template(LDIF, member_idx, group, 1)
+                member_idx += 1
             LDIF.write('\n')
 
     while idx <= int(group['entries']):
@@ -1068,14 +1249,13 @@ def writeGroup(LDIF, group):
         if group['create_unique_members']:
             if 'member_template' in group:
                 # use the template
-                memberIdx = 1
-                while memberIdx <= int(group['members']):
-                    writeTemplate(LDIF, memberIdx, group, 1, idx)
-                    memberIdx += 1
+                member_idx = 1
+                while member_idx <= int(group['members']):
+                    write_template(LDIF, member_idx, group, 1, idx)
+                    member_idx += 1
             else:
                 if group['create_members'] or group['create_unique_members']:
-                    user = {}
-                    user['schema'] = group['member_schema']
+                    user = {'schema': group['member_schema']}
                     if group['create_unique_members']:
                         user['name'] = (group['member_name'] + '_' + str(idx) +
                                         '_')
@@ -1090,63 +1270,62 @@ def writeGroup(LDIF, group):
                     user['size'] = 0
                     user['create_parent'] = False  # This was done above
                     user['suffix'] = group['suffix']
-                    writeUsers(LDIF, user)
+                    write_users(LDIF, user)
             LDIF.write('\n')
 
         if 'template' in group:
-            writeGroupTemplate(LDIF, idx, group)
+            write_group_template(LDIF, idx, group)
         else:
-            memberIdx = 1
-            groupValue = group['name'] + getIndex(idx, group['entries'])
-            rdnValue = group['rdn'] + '=' + groupValue
-            nameDN = rdnValue + ',' + group['parent']
+            member_idx = 1
+            group_value = group['name'] + get_index(idx, group['entries'])
+            rdn_value = group['rdn'] + '=' + group_value
+            name_dn = rdn_value + ',' + group['parent']
 
-            LDIF.write('dn: ' + nameDN + '\n')
+            LDIF.write('dn: ' + name_dn + '\n')
             LDIF.write('objectclass: top\n')
             LDIF.write('objectclass: groupOfUniqueNames\n')
             LDIF.write('objectclass: groupOfNames\n')
             if group['rdn'] != "cn":
-                LDIF.write('cn: ' + randomVal("alpha") + '\n')
-            LDIF.write(group['rdn'] + ": " + groupValue + '\n')
-            processAttrList(LDIF, group['schema'], idx)
+                LDIF.write('cn: ' + get_random_value("alpha") + '\n')
+            LDIF.write(group['rdn'] + ": " + group_value + '\n')
+            process_attr_list(LDIF, group['schema'], idx)
 
             # Add members
-            while memberIdx <= int(group['members']):
+            while member_idx <= int(group['members']):
                 name = group['member_name']
                 if group['create_unique_members']:
                     name = group['member_name'] + '_' + str(idx) + '_'
                 mdn = ("%s=%s%s,%s" % (group['member_rdn'], name,
-                                       getIndex(memberIdx, group['members']),
+                                       get_index(member_idx, group['members']),
                                        group['member_parent']))
                 if verbose:
                     print ('Adding ' + group['member_attr'] + ': ' + mdn)
                 LDIF.write("%s: %s\n" % (group['member_attr'], mdn))
-                memberIdx += 1
+                member_idx += 1
             LDIF.write('\n')
             if verbose:
-                print ('Created group: ' + nameDN)
+                print ('Created group: ' + name_dn)
 
         idx += 1
 
     LDIF.close()
     print ("Done.")
 
-    return
-
 
 #
 # Interactive Group Creation
 #
-def createGroup():
+def create_group():
     global padding
-    group = {}
-    group['schema'] = []
-    group['member_schema'] = []
-    group['create_members'] = False
-    group['create_member_parent'] = False
-    group['create_parent'] = False
-    group['create_unique_members'] = False
-    group['skipaci'] = True
+    group = {
+        'schema': [],
+        'member_schema': [],
+        'create_members': False,
+        'create_member_parent': False,
+        'create_parent': False,
+        'create_unique_members': False,
+        'skip_aci': True
+    }
 
     print ('\nCreate Groups')
 
@@ -1182,21 +1361,21 @@ def createGroup():
         group['create_parent'] = True
         answer = input('  Add default ACI\'s to parent entry [y]: ')
         if answer == '' or answer == 'y':
-            group['skipaci'] = False
+            group['skip_aci'] = False
 
     group['member_attr'] = input('  Enter the membership attribute ' +
                                      '[uniqueMember]: ')
     if group['member_attr'] == '':
         group['member_attr'] = 'uniqueMember'
 
-    customSchema = input('  Add additional attributes [n]: ')
-    if customSchema == 'y':
+    custom_schema = input('  Add additional attributes [n]: ')
+    if custom_schema == 'y':
         print ('    Enter \"attribute: value\", press Enter when finished.')
         while True:
-            valuePair = input('    Attr/Value: ')
-            if valuePair == '':
+            value_pair = input('    Attr/Value: ')
+            if value_pair == '':
                 break
-            group['schema'].append(valuePair)
+            group['schema'].append(value_pair)
 
     group['members'] = input('  Enter the number of members [10000]: ')
     if group['members'] == '':
@@ -1229,7 +1408,7 @@ def createGroup():
                 while group['member_template_file'] == '':
                     group['member_template_file'] = \
                         input('  Enter template file name: ')
-                readTemplate(group, 1)
+                read_template(group, 1)
             else:
                 answer = input('  Create member parent entry [n]: ')
                 if answer == 'y':
@@ -1239,68 +1418,67 @@ def createGroup():
                     input('  Enter member\'s userpassword value ' +
                               '(default is the member\'s "uid" value): ')
 
-                customSchema = input('  Add additional attributes to ' +
+                custom_schema = input('  Add additional attributes to ' +
                                          'member entry [n]: ')
-                if customSchema == 'y':
+                if custom_schema == 'y':
                     print ('    Enter \"attribute: value\", press Enter ' +
                            'when finished.')
                     while True:
-                        valuePair = input('    Attr/Value: ')
-                        if valuePair == '':
+                        value_pair = input('    Attr/Value: ')
+                        if value_pair == '':
                             break
-                        group['member_schema'].append(valuePair)
+                        group['member_schema'].append(value_pair)
         else:
-            group['create_members']
-    writeGroup(None, group)
-    return
+            group['create_members'] = False
+    write_group(None, group)
 
 
 #
 # Write the organizational units to LDIF
 #
-def writeOU(LDIF, ou):
+def write_ou(LDIF, ou):
     idx = 1
-    if not LDIF:
-        LDIF = openLDIF(None)
+    if LDIF is None:
+        LDIF = open_ldif(None)
 
     if ou['create_parent']:
-        writeParent(LDIF, ou['parent'], ou['suffix'], ou['skipaci'], False)
+        write_parent(LDIF, ou['parent'], ou['suffix'], ou['skip_aci'], False)
 
     while idx <= int(ou['entries']):
         if 'template' in ou:
-            writeTemplate(LDIF, idx, ou)
+            write_template(LDIF, idx, ou)
         else:
-            ouValue = ou['name'] + getIndex(idx, ou['entries'])
-            rdnValue = ou['rdn'] + '=' + ouValue
-            nameDN = rdnValue + ',' + ou['parent']
+            ou_value = ou['name'] + get_index(idx, ou['entries'])
+            rdn_value = ou['rdn'] + '=' + ou_value
+            name_dn = rdn_value + ',' + ou['parent']
 
-            LDIF.write('dn: ' + nameDN + '\n')
+            LDIF.write('dn: ' + name_dn + '\n')
             LDIF.write('objectclass: top\n')
             LDIF.write('objectclass: organizationalUnit\n')
             if ou['rdn'] != "ou":
-                LDIF.write('ou: ' + ouValue + '\n')
-            LDIF.write(ou['rdn'] + ": " + ouValue + '\n')
-            processAttrList(LDIF, ou['schema'], idx)
+                LDIF.write('ou: ' + ou_value + '\n')
+            LDIF.write(ou['rdn'] + ": " + ou_value + '\n')
+            process_attr_list(LDIF, ou['schema'], idx)
             LDIF.write('\n')
             if verbose:
-                print ('Created organizational unit: ' + nameDN)
+                print ('Created organizational unit: ' + name_dn)
 
         idx += 1
 
     LDIF.close()
     print ('Done.')
-    return
 
 
 #
 # Interactive Organization Unit Creation
 #
-def createOU():
+def create_ou():
     global padding
-    ou = {}
-    ou['schema'] = []
-    ou['create_parent'] = False
-    ou['skipaci'] = True
+    ou = {
+        'schema': [],
+        'create_parent': False,
+        'skip_aci': True
+    }
 
     print ('\nCreate Orgnaizational Units')
 
@@ -1338,45 +1516,44 @@ def createOU():
         ou['create_parent'] = True
         answer = input('  Add default ACI\'s to parent entry [y]: ')
         if answer == '':
-            ou['skipaci'] = False
+            ou['skip_aci'] = False
 
-    customSchema = input('  Add additional attributes [n]: ')
-    if customSchema == 'y':
+    custom_schema = input('  Add additional attributes [n]: ')
+    if custom_schema == 'y':
         print ('    Enter \"attribute: value\", press Enter when finished.  ')
         while True:
-            valuePair = input('    Attr/Value: ')
-            if valuePair == '':
+            value_pair = input('    Attr/Value: ')
+            if value_pair == '':
                 break
-            ou['schema'].append(valuePair)
+            ou['schema'].append(value_pair)
 
-    writeOU(None, ou)
-    return
+    write_ou(None, ou)
 
 
 #
 # Write the Bad LDIF
 #
-def writeBad(blended, entries):
+def write_bad_ldif(blended, entries):
     idx = 1
-    LDIF = openLDIF(None)
+    LDIF = open_ldif(None)
 
-    writeParent(LDIF, "dc=example,dc=com", "dc=example,dc=com", True, False)
+    write_parent(LDIF, "dc=example,dc=com", "dc=example,dc=com", True, False)
 
     while idx <= int(entries):
-        ouValue = 'myDups' + getIndex(idx, entries)
-        LDIF.write('dn: ou=' + ouValue + ',dc=example,dc=com\n')
+        ou_value = 'myDups' + get_index(idx, entries)
+        LDIF.write('dn: ou=' + ou_value + ',dc=example,dc=com\n')
         LDIF.write('objectclass: top\n')
         LDIF.write('objectclass: organizationalUnit\n')
-        LDIF.write('ou: ' + ouValue + '\n')
+        LDIF.write('ou: ' + ou_value + '\n')
         LDIF.write('\n')
 
         if blended:
             # Add it again
-            ouValue = 'myDups' + getIndex(idx, entries)
-            LDIF.write('dn: ou=' + ouValue + ',dc=example,dc=com\n')
+            ou_value = 'myDups' + get_index(idx, entries)
+            LDIF.write('dn: ou=' + ou_value + ',dc=example,dc=com\n')
             LDIF.write('objectclass: top\n')
             LDIF.write('objectclass: organizationalUnit\n')
-            LDIF.write('ou: ' + ouValue + '\n')
+            LDIF.write('ou: ' + ou_value + '\n')
             LDIF.write('\n')
 
         idx += 1
@@ -1385,23 +1562,22 @@ def writeBad(blended, entries):
         # Add the dups at the end
         idx = 1
         while idx <= int(entries):
-            ouValue = 'myDups' + getIndex(idx, entries)
-            LDIF.write('dn: ou=' + ouValue + ',dc=example,dc=com\n')
+            ou_value = 'myDups' + get_index(idx, entries)
+            LDIF.write('dn: ou=' + ou_value + ',dc=example,dc=com\n')
             LDIF.write('objectclass: top\n')
             LDIF.write('objectclass: organizationalUnit\n')
-            LDIF.write('ou: ' + ouValue + '\n')
+            LDIF.write('ou: ' + ou_value + '\n')
             LDIF.write('\n')
             idx += 1
 
     LDIF.close()
     print ('Done.')
-    return
 
 
 #
 # Interactive Bad LDIF Creation
 #
-def createBad():
+def create_bad_ldif():
     print ('\nCreate Bad Ldif')
 
     entries = "zero"
@@ -1416,14 +1592,14 @@ def createBad():
         blend = False
         if choice == '' or choice.lower() == 'yes' or choice.lower() == 'y':
             blend = True
-        writeBad(blend, entries)
+        write_bad_ldif(blend, entries)
 
 
 #
 # Write the Role entries to LDIF
 #
-def writeRole(LDIF, role):
-    role['role_type']
+def write_role(LDIF, role):
+    objectclasses = ''
     if role['role_type'] == 'managed':
         objectclasses = ('objectclass: nsSimpleRoleDefinition\nobjectclass: ' +
                          'nsManagedRoleDefinition\n')
@@ -1434,20 +1610,20 @@ def writeRole(LDIF, role):
         objectclasses = ('objectclass: nsComplexRoleDefinition\nobjectclass:' +
                          ' nsNestedRoleDefinition\n')
 
-    if not LDIF:
-        LDIF = openLDIF(None)
+    if LDIF is None:
+        LDIF = open_ldif(None)
 
     if role['create_parent']:
-        writeParent(LDIF, role['parent'], role['suffix'], role['skipaci'],
+        write_parent(LDIF, role['parent'], role['suffix'], role['skip_aci'],
                     False)
 
     idx = 1
     while idx <= int(role['entries']):
         if 'template' in role:
-            writeTemplate(LDIF, idx, role)
+            write_template(LDIF, idx, role)
         else:
             dn = ('dn: cn=%s%s,%s\n' % (role['name'],
-                                        getIndex(idx,
+                                        get_index(idx,
                                         role['entries']),
                                         role['parent']))
             LDIF.write(dn)
@@ -1462,29 +1638,29 @@ def writeRole(LDIF, role):
                     #
                     pair = value.split(':')
                     if len(pair) > 1:
-                        attrVal = pair[0].lstrip()
-                        if attrVal == 'RANDOM_PICK':
+                        attr_value = pair[0].lstrip()
+                        if attr_value == 'RANDOM_PICK':
                             values = pair[1].split(';')
-                            value = randomPick(values)
-                        elif attrVal == 'SEQ_SET':
+                            value = random_pick(values)
+                        elif attr_value == 'SEQ_SET':
                             values = pair[1].split(';')
-                            value = seqPick("nsRoleDN", values)
+                            value = seq_pick("nsRoleDN", values)
                     LDIF.write('nsRoleDN: ' + value + '\n')
 
             if role['role_type'] == 'filtered':
                 value = role['filter']
                 pair = value.split(':')
                 if len(pair) > 1:
-                    attrVal = pair[0].lstrip()
-                    if attrVal == 'RANDOM_PICK':
+                    attr_value = pair[0].lstrip()
+                    if attr_value == 'RANDOM_PICK':
                         values = pair[1].split(';')
-                        value = randomPick(values)
-                    elif attrVal == 'SEQ_SET':
+                        value = random_pick(values)
+                    elif attr_value == 'SEQ_SET':
                         values = pair[1].split(';')
-                        value = seqPick("nsRoleFilter", values)
+                        value = seq_pick("nsRoleFilter", values)
                 LDIF.write('nsRoleFilter: ' + value + '\n')
 
-            LDIF.write('cn: ' + role['name'] + getIndex(idx, role['entries']) +
+            LDIF.write('cn: ' + role['name'] + get_index(idx, role['entries']) +
                        '\n')
             LDIF.write('\n')
             if verbose:
@@ -1493,19 +1669,19 @@ def writeRole(LDIF, role):
 
     LDIF.close()
     print ('Done.')
-    return
 
 
 #
 # Interactive Role Creation
 #
-def createRole(roleType):
-    role = {}
-    role['role_list'] = []
-    role['create_parent'] = False
-    role['skipaci'] = True
+def create_role(role_type):
+    role = {
+        'role_list': [],
+        'create_parent': False,
+        'skip_aci': True
+    }
 
-    print ('\nCreate ' + roleType + ' role')
+    print ('\nCreate ' + role_type + ' role')
 
     role['entries'] = input('  Enter number of roles to create [1]: ')
     if role['entries'] == '':
@@ -1529,9 +1705,9 @@ def createRole(roleType):
         role['create_parent'] = True
         answer = input('  Add default ACI\'s to parent entry [y]: ')
         if answer == '' or answer == 'y':
-            role['skipaci'] = False
+            role['skip_aci'] = False
 
-    if roleType == 'nested':
+    if role_type == 'nested':
         print ('  Add nsRoleDNs (press Enter when finished)')
         while True:
             value = input('  nsRoleDN: ')
@@ -1539,90 +1715,90 @@ def createRole(roleType):
                 break
             role['role_list'].append(value)
 
-    if roleType == 'filtered':
+    if role_type == 'filtered':
         role['filter'] = input('  Enter role filter [objectclass=top]: ')
         if role['filter'] == '':
             role['filter'] = 'objectclass=top'
 
     print ('\n')
-    writeRole(None, roleType, role)
-    return
+    write_role(None, role)
 
 
 #
 # Write the COS entries to the LDIF
 #
-def writeCOS(LDIF, cosType, cosTmpl, cosDef):
-    if cosType == 'pointer':
+def write_cos(LDIF, cos_type, cos_template, cos_def):
+    objectclass = ''
+    if cos_type == 'pointer':
         objectclass = 'objectclass: cosPointerDefinition\n'
-    if cosType == 'indirect':
+    if cos_type == 'indirect':
         objectclass = 'objectclass: cosIndirectDefinition\n'
-    if cosType == 'classic':
+    if cos_type == 'classic':
         objectclass = 'objectclass: cosClassicDefinition\n'
 
-    if not LDIF:
-        LDIF = openLDIF(None)
+    if LDIF is None:
+        LDIF = open_ldif(None)
 
-    if cosTmpl['create_parent']:
-        writeParent(LDIF, cosTmpl['parent'], cosTmpl['suffix'], True, False)
-    if cosDef['create_parent'] and cosTmpl['parent'] != cosDef['parent']:
-        writeParent(LDIF, cosDef['parent'], cosDef['suffix'], True, False)
+    if cos_template['create_parent']:
+        write_parent(LDIF, cos_template['parent'], cos_template['suffix'], True, False)
+    if cos_def['create_parent'] and cos_template['parent'] != cos_def['parent']:
+        write_parent(LDIF, cos_def['parent'], cos_def['suffix'], True, False)
 
     idx = 1
-    while idx <= int(cosDef['entries']):
+    while idx <= int(cos_def['entries']):
         # Create definition entry
-        dn = ('dn: cn=%s%s,%s\n' % (cosDef['name'],
-                                    getIndex(idx, int(cosDef['entries'])),
-                                    cosDef['parent']))
+        dn = ('dn: cn=%s%s,%s\n' % (cos_def['name'],
+                                    get_index(idx, int(cos_def['entries'])),
+                                    cos_def['parent']))
         LDIF.write(dn)
         LDIF.write('objectclass: top\n')
         LDIF.write('objectclass: cosSuperDefinition\n')
         LDIF.write(objectclass)
-        LDIF.write('cn: ' + cosDef['name'] +
-                   getIndex(idx, int(cosDef['entries'])) + '\n')
+        LDIF.write('cn: ' + cos_def['name'] +
+                   get_index(idx, int(cos_def['entries'])) + '\n')
 
-        if cosType == 'pointer' or cosType == 'classic':
-            LDIF.write('cosTemplateDN: cn=' + cosTmpl['name'] +
-                       getIndex(idx, int(cosDef['entries'])) +
-                       ',' + cosTmpl['parent'] + '\n')
-        if cosType == 'classic':
-            value = cosDef['cosSpecifier']
+        if cos_type == 'pointer' or cos_type == 'classic':
+            LDIF.write('cosTemplateDN: cn=' + cos_template['name'] +
+                       get_index(idx, int(cos_def['entries'])) +
+                       ',' + cos_template['parent'] + '\n')
+        if cos_type == 'classic':
+            value = cos_def['cosSpecifier']
             pair = value.split(':')
             if len(pair) > 1:
-                attrVal = pair[0].lstrip()
-                if attrVal == 'RANDOM_PICK':
+                attr_value = pair[0].lstrip()
+                if attr_value == 'RANDOM_PICK':
                     values = pair[1].split(';')
-                    value = randomPick(values)
-                elif attrVal == 'SEQ_SET':
+                    value = random_pick(values)
+                elif attr_value == 'SEQ_SET':
                     if len(pair) > 1:
                         values = pair[1].split(';')
-                        value = seqPick("cosSpecifier", values)
+                        value = seq_pick("cosSpecifier", values)
             LDIF.write('cosSpecifier: ' + value + '\n')
 
-        if cosType == 'indirect':
-            value = cosDef['indirectSpecifier']
+        if cos_type == 'indirect':
+            value = cos_def['indirectSpecifier']
             pair = value.split(':')
             if len(pair) > 1:
-                attrVal = pair[0].lstrip()
-                if attrVal == 'RANDOM_PICK':
+                attr_value = pair[0].lstrip()
+                if attr_value == 'RANDOM_PICK':
                     values = pair[1].split(';')
-                    value = randomPick(values)
-                elif attrVal == 'SEQ_SET':
+                    value = random_pick(values)
+                elif attr_value == 'SEQ_SET':
                     values = pair[1].split(';')
-                    value = seqPick("cosIndirectSpecifier", values)
+                    value = seq_pick("cosIndirectSpecifier", values)
             LDIF.write('cosIndirectSpecifier: ' + value + '\n')
 
-        for attr in cosDef['attr_list']:
+        for attr in cos_def['attr_list']:
             value = attr
             pair = attr.split(':')
             if len(pair) > 1:
-                attrVal = pair[0].lstrip()
-                if attrVal == 'RANDOM_PICK':
+                attr_value = pair[0].lstrip()
+                if attr_value == 'RANDOM_PICK':
                     values = pair[1].split(';')
-                    value = randomPick(values)
-                elif attrVal == 'SEQ_SET':
+                    value = random_pick(values)
+                elif attr_value == 'SEQ_SET':
                     values = pair[1].split(';')
-                    value = seqPick("cosAttribute", values)
+                    value = seq_pick("cosAttribute", values)
             LDIF.write('cosAttribute: ' + value + '\n')
 
         LDIF.write('\n')
@@ -1631,27 +1807,27 @@ def writeCOS(LDIF, cosType, cosTmpl, cosDef):
         idx += 1
 
     idx = 1
-    while idx <= int(cosTmpl['entries']) and int(cosTmpl['entries']) > 0:
+    while idx <= int(cos_template['entries']) and int(cos_template['entries']) > 0:
         # Create template entry
-        dn = 'dn: cn=' + cosTmpl['name'] + getIndex(idx, int(cosDef['entries'])) + ',' + cosTmpl['parent'] + '\n'
+        dn = 'dn: cn=' + cos_template['name'] + get_index(idx, int(cos_def['entries'])) + ',' + cos_template['parent'] + '\n'
         LDIF.write(dn)
         LDIF.write('objectclass: top\n')
         LDIF.write('objectclass: extensibleObject\n')
         LDIF.write('objectclass: cosTemplate\n')
-        LDIF.write('cn: ' + cosTmpl['name'] + getIndex(idx, int(cosDef['entries'])) + '\n')
-        for attr in cosTmpl['attr_list']:
+        LDIF.write('cn: ' + cos_template['name'] + get_index(idx, int(cos_def['entries'])) + '\n')
+        for attr in cos_template['attr_list']:
             value = attr
             pair = attr.split(':')
             if len(pair) > 2:
-                attrVal = pair[1].lstrip()
-                if attrVal == 'RANDOM_PICK':
+                attr_value = pair[1].lstrip()
+                if attr_value == 'RANDOM_PICK':
                     values = pair[2].split(';')
-                    value = pair[0] + ': ' + randomPick(values)
-                elif attrVal == 'SEQ_SET':
+                    value = pair[0] + ': ' + random_pick(values)
+                elif attr_value == 'SEQ_SET':
                     values = pair[2].split(';')
-                    value = pair[0] + ': ' + seqPick(pair[0], values)
+                    value = pair[0] + ': ' + seq_pick(pair[0], values)
             LDIF.write(value + '\n')
-        LDIF.write('cosPriority: ' + cosTmpl['priority'] + '\n')
+        LDIF.write('cosPriority: ' + cos_template['priority'] + '\n')
         LDIF.write('\n')
         if verbose:
             print ('Created DOS template entry: ' + dn.rstrip())
@@ -1659,106 +1835,106 @@ def writeCOS(LDIF, cosType, cosTmpl, cosDef):
 
     LDIF.close()
     print ("Done.")
-    return
 
 
 #
 # Interactive COS Creation
 #
-def createCOS(cosType):
-    cosTmpl = {}
-    cosDef = {}
-    cosTmpl['attr_list'] = []
-    cosDef['attr_list'] = []
-    cosTmpl['create_parent'] = False
-    cosTmpl['skipaci'] = True
-    cosDef['create_parent'] = False
-    cosDef['skipaci'] = True
+def create_cos(cos_type):
+    cos_template = {
+        'attr_list': [],
+        'create_parent': False,
+        'skip_aci': True
+    }
+    cos_def = {
+        'attr_list': [],
+        'create_parent': False,
+        'skip_aci': True
+    }
 
-    print ('\nCreate COS (' + cosType + ')')
+    print ('\nCreate COS (' + cos_type + ')')
 
-    cosTmpl['entries'] = input('  Enter the number of COS templates to create [1]: ')
-    if cosTmpl['entries'] == '':
-        cosTmpl['entries'] = '1'
+    cos_template['entries'] = input('  Enter the number of COS templates to create [1]: ')
+    if cos_template['entries'] == '':
+        cos_template['entries'] = '1'
 
-    cosTmpl['suffix'] = input('  Enter base suffix DN [dc=example,dc=com]: ')
-    if cosTmpl['suffix'] == '':
-        cosTmpl['suffix'] = 'dc=example,dc=com'
+    cos_template['suffix'] = input('  Enter base suffix DN [dc=example,dc=com]: ')
+    if cos_template['suffix'] == '':
+        cos_template['suffix'] = 'dc=example,dc=com'
 
-    if cosTmpl['entries'] > 0:
+    if cos_template['entries'] > 0:
         # indirect COS does not use a template, so its okay to skip the template questions
-        cosTmpl['name'] = input('  Enter COS Template Name [cosTemplate]: ')
-        if cosTmpl['name'] == '':
-            cosTmpl['name'] = 'cosTemplate'
+        cos_template['name'] = input('  Enter COS Template Name [cosTemplate]: ')
+        if cos_template['name'] == '':
+            cos_template['name'] = 'cosTemplate'
 
-        cosTmpl['parent'] = input('  Enter template parent DN [' + cosTmpl['suffix'] + ']: ')
-        if cosTmpl['parent'] == '':
-            cosTmpl['parent'] = cosTmpl['suffix']
+        cos_template['parent'] = input('  Enter template parent DN [' + cos_template['suffix'] + ']: ')
+        if cos_template['parent'] == '':
+            cos_template['parent'] = cos_template['suffix']
 
         answer = input('  Create template parent entry [n]: ')
         if answer == 'y':
-            cosTmpl['create_parent'] = True
+            cos_template['create_parent'] = True
             answer = input('  Add default ACI\'s to parent entry [y]: ')
             if answer == '' or answer == 'y':
-                cosTmpl['skipaci'] = False
+                cos_template['skip_aci'] = False
 
         print ('  Enter template \"attribute: value\", press Enter when finished.')
         while True:
-            valuePair = input('  Attr/Value: ')
-            if valuePair == '':
+            value_pair = input('  Attr/Value: ')
+            if value_pair == '':
                 break
-            cosTmpl['attr_list'].append(valuePair)
-        cosTmpl['priority'] = input('  Enter template priority [0]: ')
-        if cosTmpl['priority'] == '':
-            cosTmpl['priority'] = '0'
+            cos_template['attr_list'].append(value_pair)
+        cos_template['priority'] = input('  Enter template priority [0]: ')
+        if cos_template['priority'] == '':
+            cos_template['priority'] = '0'
 
-    cosDef['entries'] = input('  Enter the number of COS defintions to create [1]: ')
-    if cosDef['entries'] == '':
-        cosDef['entries'] = '1'
+    cos_def['entries'] = input('  Enter the number of COS defintions to create [1]: ')
+    if cos_def['entries'] == '':
+        cos_def['entries'] = '1'
 
-    cosDef['name'] = input('  Enter COS Definition name [COSDef]: ')
-    if cosDef['name'] == '':
-        cosDef['name'] = 'COSDef'
+    cos_def['name'] = input('  Enter COS Definition name [cos_def]: ')
+    if cos_def['name'] == '':
+        cos_def['name'] = 'cos_def'
 
-    cosDef['parent'] = input('  Enter definition parent DN [' + cosTmpl['suffix'] + ']: ')
-    if cosDef['parent'] == '':
-        cosDef['parent'] = cosTmpl['suffix']
+    cos_def['parent'] = input('  Enter definition parent DN [' + cos_template['suffix'] + ']: ')
+    if cos_def['parent'] == '':
+        cos_def['parent'] = cos_template['suffix']
 
     answer = input('  Create definition parent entry [n]: ')
     if answer == 'y':
-        cosDef['create_parent'] = True
+        cos_def['create_parent'] = True
         answer = input('  Add default ACI\'s to parent entry [y]: ')
         if answer == '' or answer == 'y':
-            cosDef['skipaci'] = False
+            cos_def['skip_aci'] = False
 
-    if cosType == 'classic':
-        cosDef['cosSpecifier'] = input('  Enter COS specifier [description]: ')
-        if cosDef['cosSpecifier'] == '':
-            cosDef['cosSpecifier'] = 'description'
+    if cos_type == 'classic':
+        cos_def['cosSpecifier'] = input('  Enter COS specifier [description]: ')
+        if cos_def['cosSpecifier'] == '':
+            cos_def['cosSpecifier'] = 'description'
 
-    if cosType == 'indirect':
-        cosDef['indirectSpecifier'] = input('  Enter COS indirect specifier [description]: ')
-        if cosDef['indirectSpecifier'] == '':
-            cosDef['indirectSpecifier'] = 'description'
+    if cos_type == 'indirect':
+        cos_def['indirectSpecifier'] = input('  Enter COS indirect specifier [description]: ')
+        if cos_def['indirectSpecifier'] == '':
+            cos_def['indirectSpecifier'] = 'description'
 
     print ('  Enter COS attributes, press Enter when finished.')
     while True:
         value = input('  COS attribute: ')
         if value == '':
             break
-        cosDef['attr_list'].append(value)
+        cos_def['attr_list'].append(value)
 
     print ('\n')
-    writeCOS(None, cosType, cosTmpl, cosDef)
-    return
+    write_cos(None, cos_type, cos_template, cos_def)
 
 
 #
 # Write the Mods to the LDIF
 #
-def writeMods(LDIF, entry):
-    if not LDIF:
-        LDIF = openLDIF(None)
+def write_mods(LDIF, entry):
+    if LDIF is None:
+        LDIF = open_ldif(None)
 
     if entry['mixops']:
         added_sup = 0
@@ -1773,24 +1949,23 @@ def writeMods(LDIF, entry):
             total_ops = addc + delc + modc + mdnc + mrdnc
 
             while total_ops:
-                op = randomPick(operations)
-                print
+                op = random_pick(operations)
                 if op == 'add':
                     if addc < 1:
                         # no more adds to do
                         operations.remove('add')
                         continue
 
-                    LDIF.write("dn: uid=%s%s,%s\n" % (entry['name'], getIndex(addc, entry['mix-add']), entry['parent']))
+                    LDIF.write("dn: uid=%s%s,%s\n" % (entry['name'], get_index(addc, entry['mix-add']), entry['parent']))
                     LDIF.write("changetype: add\n")
                     LDIF.write("objectclass: top\n")
                     LDIF.write("objectclass: person\n")
                     LDIF.write("objectclass: inetorgperson\n")
-                    LDIF.write("uid: %s%s\n" % (entry['name'], getIndex(addc, entry['mix-add'])))
-                    LDIF.write("sn: %s\n" % getIndex(addc, entry['mix-add']))
+                    LDIF.write("uid: %s%s\n" % (entry['name'], get_index(addc, entry['mix-add'])))
+                    LDIF.write("sn: %s\n" % get_index(addc, entry['mix-add']))
                     LDIF.write("givenname: %s\n" % entry['name'])
-                    LDIF.write("cn: %s %s\n" % (entry['name'], getIndex(addc, entry['mix-add'])))
-                    #LDIF.write("userpassword: %s%s\n" % (entry['name'], getIndex(addc, entry['mix-add'])))
+                    LDIF.write("cn: %s %s\n" % (entry['name'], get_index(addc, entry['mix-add'])))
+                    #LDIF.write("userpassword: %s%s\n" % (entry['name'], get_index(addc, entry['mix-add'])))
                     LDIF.write("\n")
                     addc -= 1
                     total_ops -= 1
@@ -1802,7 +1977,7 @@ def writeMods(LDIF, entry):
                         operations.remove('mod')
                         continue
 
-                    LDIF.write("dn: uid=%s%s,%s\n" % (entry['name'], getIndex(modc, entry['mix-mod']), entry['parent']))
+                    LDIF.write("dn: uid=%s%s,%s\n" % (entry['name'], get_index(modc, entry['mix-mod']), entry['parent']))
                     LDIF.write("changetype: modify\n")
                     LDIF.write("replace: description\n")
                     LDIF.write("description: my new new description\n")
@@ -1817,7 +1992,7 @@ def writeMods(LDIF, entry):
                         operations.remove('delete')
                         continue
 
-                    LDIF.write("dn: uid=%s%s,%s\n" % (entry['name'], getIndex(delc, entry['mix-del']), entry['parent']))
+                    LDIF.write("dn: uid=%s%s,%s\n" % (entry['name'], get_index(delc, entry['mix-del']), entry['parent']))
                     LDIF.write("changetype: delete\n")
                     LDIF.write(" \n")
                     delc -= 1
@@ -1830,10 +2005,10 @@ def writeMods(LDIF, entry):
                         operations.remove('modrdn')
                         continue
 
-                    LDIF.write("dn: uid=%s%s,%s\n" % (entry['name'], getIndex(mrdnc, entry['mix-modrdn']),
+                    LDIF.write("dn: uid=%s%s,%s\n" % (entry['name'], get_index(mrdnc, entry['mix-modrdn']),
                                     entry['parent']))
                     LDIF.write("changetype: modrdn\n")
-                    LDIF.write("newrdn: cn=%s%s\n" % (entry['name'], getIndex(mrdnc, entry['mix-modrdn'])))
+                    LDIF.write("newrdn: cn=%s%s\n" % (entry['name'], get_index(mrdnc, entry['mix-modrdn'])))
                     LDIF.write("deleteoldrdn: 1\n")
                     LDIF.write("\n")
                     mrdnc -= 1
@@ -1854,10 +2029,10 @@ def writeMods(LDIF, entry):
                         LDIF.write("ou: New Branch\n\n")
                         added_sup = 1
 
-                    LDIF.write("dn: uid=%s%s,%s\n" % (entry['name'], getIndex(mdnc, entry['mix-moddn']),
+                    LDIF.write("dn: uid=%s%s,%s\n" % (entry['name'], get_index(mdnc, entry['mix-moddn']),
                                     entry['parent']))
                     LDIF.write("changetype: modrdn\n")
-                    LDIF.write("newrdn: cn=%s%s\n" % (entry['name'], getIndex(mdnc, entry['mix-moddn'])))
+                    LDIF.write("newrdn: cn=%s%s\n" % (entry['name'], get_index(mdnc, entry['mix-moddn'])))
                     LDIF.write("deleteoldrdn: 1\n")
                     LDIF.write("newsuperior: ou=New Branch,%s\n" % entry['parent'])
                     LDIF.write("\n")
@@ -1877,47 +2052,47 @@ def writeMods(LDIF, entry):
             idx = 1
 
             while idx <= int(entry['mix-add']):
-                LDIF.write("dn: uid=%s%s,%s\n" % (entry['name'], getIndex(idx, entry['mix-add']), entry['parent']))
+                LDIF.write("dn: uid=%s%s,%s\n" % (entry['name'], get_index(idx, entry['mix-add']), entry['parent']))
                 LDIF.write("changetype: add\n")
                 LDIF.write("objectclass: top\n")
                 LDIF.write("objectclass: person\n")
                 LDIF.write("objectclass: inetorgperson\n")
-                LDIF.write("uid: %s%s\n" % (entry['name'], getIndex(idx, entry['mix-add'])))
-                LDIF.write("sn: %s\n" % getIndex(idx, entry['mix-add']))
+                LDIF.write("uid: %s%s\n" % (entry['name'], get_index(idx, entry['mix-add'])))
+                LDIF.write("sn: %s\n" % get_index(idx, entry['mix-add']))
                 LDIF.write("givenname: %s\n" % entry['name'])
-                LDIF.write("cn: %s %s\n" % (entry['name'], getIndex(idx, entry['mix-add'])))
-                #LDIF.write("userpassword: %s%s\n" % (entry['name'], getIndex(idx, entry['mix-add'])))
+                LDIF.write("cn: %s %s\n" % (entry['name'], get_index(idx, entry['mix-add'])))
+                #LDIF.write("userpassword: %s%s\n" % (entry['name'], get_index(idx, entry['mix-add'])))
                 LDIF.write("\n")
                 idx += 1
 
             idx = 1
             while idx <= int(entry['mix-mod']):
                 # Do mod: add, replace, delete
-                LDIF.write("dn: uid=%s%s,%s\n" % (entry['name'], getIndex(idx, entry['mix-mod']), entry['parent']))
+                LDIF.write("dn: uid=%s%s,%s\n" % (entry['name'], get_index(idx, entry['mix-mod']), entry['parent']))
                 LDIF.write("changetype: modify\n")
                 LDIF.write("replace: description\n")
                 LDIF.write("description: my new new description\n")
                 LDIF.write("\n")
 
-                LDIF.write("dn: uid=%s%s,%s\n" % (entry['name'], getIndex(idx, entry['mix-mod']), entry['parent']))
+                LDIF.write("dn: uid=%s%s,%s\n" % (entry['name'], get_index(idx, entry['mix-mod']), entry['parent']))
                 LDIF.write("changetype: modify\n")
                 LDIF.write("add: sn\n")
                 LDIF.write("sn: my new surname\n")
                 LDIF.write("\n")
 
-                LDIF.write("dn: uid=%s%s,%s\n" % (entry['name'], getIndex(idx, entry['mix-mod']), entry['parent']))
+                LDIF.write("dn: uid=%s%s,%s\n" % (entry['name'], get_index(idx, entry['mix-mod']), entry['parent']))
                 LDIF.write("changetype: modify\n")
                 LDIF.write("delete: description\n")
                 LDIF.write("\n")
 
                 # multiple mod op: sn, userpassword, description
-                LDIF.write("dn: uid=%s%s,%s\n" % (entry['name'], getIndex(idx, entry['mix-mod']), entry['parent']))
+                LDIF.write("dn: uid=%s%s,%s\n" % (entry['name'], get_index(idx, entry['mix-mod']), entry['parent']))
                 LDIF.write("changetype: modify\n")
                 LDIF.write("replace: sn\n")
                 LDIF.write("sn: my new new surname\n")
                 LDIF.write("-\n")
                 LDIF.write("replace: userpassword\n")
-                LDIF.write("userpassword: newpassword%s\n" % getIndex(idx, entry['mix-mod']))
+                LDIF.write("userpassword: newpassword%s\n" % get_index(idx, entry['mix-mod']))
                 LDIF.write("-\n")
                 LDIF.write("replace: description\n")
                 LDIF.write("description: multi mod operation\n")
@@ -1927,9 +2102,9 @@ def writeMods(LDIF, entry):
 
             idx = 1
             while idx <= int(entry['mix-modrdn']):
-                LDIF.write("dn: uid=%s%s,%s\n" % (entry['name'], getIndex(idx, entry['mix-modrdn']), entry['parent']))
+                LDIF.write("dn: uid=%s%s,%s\n" % (entry['name'], get_index(idx, entry['mix-modrdn']), entry['parent']))
                 LDIF.write("changetype: modrdn\n")
-                LDIF.write("newrdn: cn=%s%s\n" % (entry['name'], getIndex(idx, entry['mix-modrdn'])))
+                LDIF.write("newrdn: cn=%s%s\n" % (entry['name'], get_index(idx, entry['mix-modrdn'])))
                 LDIF.write("deleteoldrdn: 1\n")
                 LDIF.write("\n")
                 entry['mod_op'] = 'modrdn'  # for delete entries as the end
@@ -1945,9 +2120,9 @@ def writeMods(LDIF, entry):
                     LDIF.write("ou: NeW Branch\n\n")
                     added_sup = 1
 
-                LDIF.write("dn: uid=%s%s,%s\n" % (entry['name'], getIndex(idx, entry['mix-moddn']), entry['parent']))
+                LDIF.write("dn: uid=%s%s,%s\n" % (entry['name'], get_index(idx, entry['mix-moddn']), entry['parent']))
                 LDIF.write("changetype: modrdn\n")
-                LDIF.write("newrdn: cn=%s%s\n" % (entry['name'], getIndex(idx, entry['mix-moddn'])))
+                LDIF.write("newrdn: cn=%s%s\n" % (entry['name'], get_index(idx, entry['mix-moddn'])))
                 LDIF.write("deleteoldrdn: 1\n")
                 LDIF.write("newsuperior: ou=New Branch,%s\n" % entry['parent'])
                 LDIF.write("\n")
@@ -1957,30 +2132,30 @@ def writeMods(LDIF, entry):
 
             idx = 1
             while idx <= int(entry['mix-del']):
-                LDIF.write("dn: uid=%s%s,%s\n" % (entry['name'], getIndex(idx, entry['mix-del']), entry['parent']))
+                LDIF.write("dn: uid=%s%s,%s\n" % (entry['name'], get_index(idx, entry['mix-del']), entry['parent']))
                 LDIF.write("changetype: delete\n")
                 LDIF.write(" \n")
                 idx += 1
 
     else:
         if entry['create_entries']:
-            writeUsers(LDIF, entry, True)
+            write_users(LDIF, entry, True)
 
         if entry['modify_entries']:
             idx = 1
-            random = False
+            random_val = False
             if entry['attr_val'] == 'RANDOM':
-                entry['attr_val'] = randomVal('alpha')
-                random = True
+                entry['attr_val'] = get_random_value('alpha')
+                random_val = True
             while idx <= int(entry['entries']):
-                dn = ("dn: %s=%s%s,%s\n" % (entry['rdn'], entry['name'], getIndex(idx, entry['entries']),
+                dn = ("dn: %s=%s%s,%s\n" % (entry['rdn'], entry['name'], get_index(idx, entry['entries']),
                          entry['parent']))
                 mod_count = 0
                 while mod_count < int(entry['mod_num']):
                     LDIF.write(dn)
                     if entry['mod_op'] == 'modrdn':
                         LDIF.write('changetype: modrdn\n')
-                        LDIF.write('newrdn: %s%s\n' % (entry['newrdn'], getIndex(idx, entry['entries'])))
+                        LDIF.write('newrdn: %s%s\n' % (entry['newrdn'], get_index(idx, entry['entries'])))
                         LDIF.write('deleteoldrdn: %s\n' % (entry['deleteoldrdn']))
                         if entry['newsuperior']:
                             LDIF.write('newsuperior: %s\n' % (entry['newsuperior']))
@@ -1988,8 +2163,8 @@ def writeMods(LDIF, entry):
                         LDIF.write('changetype: modify\n')
                         LDIF.write('%s: %s\n' % (entry['mod_op'], entry['mod_attr']))
                         if entry['attr_val'] != '':
-                            if random:
-                                entry['attr_val'] = randomVal('alpha')
+                            if random_val:
+                                entry['attr_val'] = get_random_value('alpha')
                             if entry['mod_op'] == 'add':
                                 # Add the index number to the value, so we don't get "type or value exists"
                                 LDIF.write('%s: %s%d\n' % (entry['mod_attr'], entry['attr_val'], mod_count))
@@ -2006,7 +2181,7 @@ def writeMods(LDIF, entry):
             while mod_count <= int(entry['entries']):
                 LDIF.write('add: uniquemember\n')
                 LDIF.write('uniquemember: uid=%s%s,%s\n' % (entry['name'],
-                           getIndex(mod_count, entry['entries']), entry['parent']))
+                           get_index(mod_count, entry['entries']), entry['parent']))
                 LDIF.write('-\n')
                 mod_count += 1
             LDIF.write('\n')
@@ -2018,16 +2193,16 @@ def writeMods(LDIF, entry):
                 # We have to delete the entry by its new RDN
                 if entry['newsuperior']:
                     if entry['mixops']:
-                        dn = 'dn: cn=%s%s,%s\n' % (entry['name'], getIndex(idx, entry['entries']), entry['newsuperior'])
+                        dn = 'dn: cn=%s%s,%s\n' % (entry['name'], get_index(idx, entry['entries']), entry['newsuperior'])
                     else:
-                        dn = 'dn: %s%s,%s\n' % (entry['newrdn'], getIndex(idx, entry['entries']), entry['newsuperior'])
+                        dn = 'dn: %s%s,%s\n' % (entry['newrdn'], get_index(idx, entry['entries']), entry['newsuperior'])
                 else:
                     if entry['mixops']:
-                        dn = 'dn: cn=%s%s,%s\n' % (entry['name'], getIndex(idx, entry['entries']), entry['parent'])
+                        dn = 'dn: cn=%s%s,%s\n' % (entry['name'], get_index(idx, entry['entries']), entry['parent'])
                     else:
-                        dn = 'dn: %s%s,%s\n' % (entry['newrdn'], getIndex(idx, entry['entries']), entry['parent'])
+                        dn = 'dn: %s%s,%s\n' % (entry['newrdn'], get_index(idx, entry['entries']), entry['parent'])
             else:
-                dn = ("dn: %s=%s%s,%s\n" % (entry['rdn'], entry['name'], getIndex(idx, entry['entries']),
+                dn = ("dn: %s=%s%s,%s\n" % (entry['rdn'], entry['name'], get_index(idx, entry['entries']),
                           entry['parent']))
             LDIF.write(dn)
             LDIF.write('changetype: delete\n')
@@ -2036,28 +2211,28 @@ def writeMods(LDIF, entry):
 
     LDIF.close()
     print ('Done.')
-    return
 
 
 #
 # Interactive Mod Creation
 #
-def createMods():
-    entry = {}
-    entry['schema'] = []
-    entry['skipaci'] = True
-    entry['create_parent'] = False
-    entry['modify_entries'] = False
-    entry['create_entries'] = False
-    entry['delete_entries'] = False
-    entry['unnorm'] = False
-    entry['createorgchart'] = False
-    entry['size'] = 'empty'
-    entry['add_to_group'] = False
-    entry['mix-moddn'] = '0'
-    entry['mix-modrdn'] = '0'
-    entry['mod_op'] = ''
-    entry['newsuperior'] = ''
+def create_mods():
+    entry = {
+        'schema': [],
+        'skip_aci': True,
+        'create_parent': False,
+        'modify_entries': False,
+        'create_entries': False,
+        'delete_entries': False,
+        'unnorm': False,
+        'createorgchart': False,
+        'size': -1,
+        'add_to_group': False,
+        'mix-moddn': '0',
+        'mix-modrdn': '0',
+        'mod_op': '',
+        'newsuperior': ''
+    }
 
     print ('\nCreate Modification LDIF')
 
@@ -2082,7 +2257,7 @@ def createMods():
         entry['create_parent'] = True
         answer = input('  Add default ACI\'s to parent entry [y]: ')
         if answer == '' or answer == 'y':
-            entry['skipaci'] = False
+            entry['skip_aci'] = False
 
     #
     # Mixed operations
@@ -2137,14 +2312,14 @@ def createMods():
             if answer == 'y':
                 entry['unnorm'] = True
 
-            customSchema = input('    Add additional attributes [n]: ')
-            if customSchema == 'y':
+            custom_schema = input('    Add additional attributes [n]: ')
+            if custom_schema == 'y':
                 print ('      Enter \"attribute: value\", press Enter when finished.')
                 while True:
-                    valuePair = input('      Attr/Value: ')
-                    if valuePair == '':
+                    value_pair = input('      Attr/Value: ')
+                    if value_pair == '':
                         break
-                    entry['schema'].append(valuePair)
+                    entry['schema'].append(value_pair)
 
             while not entry['size'].isdigit():
                 entry['size'] = input('    Enter entry size(in bytes) or press ENTER for default size: ')
@@ -2209,11 +2384,11 @@ def createMods():
     if answer == 'y':
         entry['delete_entries'] = True
 
-    writeMods(None, entry)
+    write_mods(None, entry)
     return
 
 
-def valueYes(value):
+def value_yes(value):
     val = value.lower()
     if val == 'y' or val == 'yes':
         return True
@@ -2221,14 +2396,14 @@ def valueYes(value):
         return False
 
 
-def verifyYesNo(param, value):
+def verify_yes_no(param, value):
     val = value.lower()
     if val != 'y' and val != 'yes' and val != 'n' and val != 'no':
         print ('Invalid value for yes/no parameter: %s' % param)
         exit(1)
 
 
-def parseInfFile(infFile):
+def parse_inf_file(inf_file):
     directive = 'none'
     gen = {}
     users = {}
@@ -2236,13 +2411,14 @@ def parseInfFile(infFile):
     roles = {}
     cos = {}
     mods = {}
+    params = []
 
     try:
-        inf = open(infFile, "r")
+        inf = open(inf_file, "r")
         params = list(inf)
         inf.close()
     except IOError:
-        print ('Failed to open file ' + infFile)
+        print ('Failed to open file ' + inf_file)
         exit(1)
 
     for p in params:
@@ -2253,7 +2429,7 @@ def parseInfFile(infFile):
             directive = 'users'
             continue
         elif p.lower() == '[groups]':
-            directive == 'groups'
+            directive = 'groups'
             continue
         elif p.lower() == '[roles]':
             directive = 'roles'
@@ -2268,6 +2444,8 @@ def parseInfFile(infFile):
             directive = 'none'
             continue
 
+        # MARK TODO - Add IPA user/host
+
         val = p.split('=', 1)[1].lstrip()
 
         if directive == 'gen':
@@ -2279,12 +2457,12 @@ def parseInfFile(infFile):
             if p.lower().startswith('parentsuffix'):
                 gen['parentsuffix'] = val
             if p.lower().startswith('createaparent'):
-                verifyYesNo(p, val)
+                verify_yes_no(p, val)
                 gen['createparent'] = val
             if p.lower().startswith('defaultacis'):
-                verifyYesNo(p, val)
-                if valueYes(val):
-                    gen['skipaci'] = val
+                verify_yes_no(p, val)
+                if value_yes(val):
+                    gen['skip_aci'] = val
             if p.lower().startswith('createorgchart'):
                 gen['createorgchart'] = val
 
@@ -2296,14 +2474,14 @@ def parseInfFile(infFile):
             if p.lower().startswith('numentries'):
                 users['numentries'] = val
             if p.lower().startswith('padding'):
-                verifyYesNo(p, val)
+                verify_yes_no(p, val)
                 users['padding'] = val
             if p.lower().startswith('template'):
                 users['template'] = val
-            if p.lower().startswith('attrval'):
-                users['attrval'] = val
+            if p.lower().startswith('attr_value'):
+                users['attr_value'] = val
             if p.lower().startswith('normalizeddn'):
-                verifyYesNo(p, val)
+                verify_yes_no(p, val)
                 users['normalizeddn'] = val
             if p.lower().startswith('password'):
                 users['password'] = val
@@ -2318,19 +2496,19 @@ def parseInfFile(infFile):
             if p.lower().startswith('numentries'):
                 groups['numentries'] = val
             if p.lower().startswith('padding'):
-                verifyYesNo(p, val)
+                verify_yes_no(p, val)
                 groups['padding'] = val
             if p.lower().startswith('template'):
                 groups['template'] = val
-            if p.lower().startswith('attrval'):
-                groups['attrval'] = val
+            if p.lower().startswith('attr_value'):
+                groups['attr_value'] = val
             if p.lower().startswith('membershipattr'):
                 groups['membershipattr'] = val
             if p.lower().startswith('createmembers'):
-                verifyYesNo(p, val)
+                verify_yes_no(p, val)
                 groups['createmembers'] = val
             if p.lower().startswith('createuniquemembers'):
-                verifyYesNo(p, val)
+                verify_yes_no(p, val)
                 groups['createuniquemembers'] = val
             # member settings
             if p.lower().startswith('membertemplate'):
@@ -2343,8 +2521,8 @@ def parseInfFile(infFile):
                 groups['memberparent'] = val
             if p.lower().startswith('memberpassword'):
                 groups['memberpassword'] = val
-            if p.lower().startswith('memberattrval'):
-                groups['memberattrval'] = val
+            if p.lower().startswith('memberattr_value'):
+                groups['memberattr_value'] = val
             if p.lower().startswith('membersize'):
                 groups['membersize'] = val
 
@@ -2357,30 +2535,30 @@ def parseInfFile(infFile):
                 roles['rolefilter'] = val
 
         if directive == 'cos':
-            if p.lower().startswith('costype'):
-                cos['costype'] = val
+            if p.lower().startswith('cos_type'):
+                cos['cos_type'] = val
             # templates
-            if p.lower().startswith('costmplname'):
-                cos['costmplname'] = val
-            if p.lower().startswith('costmplnum'):
-                cos['costmplnum'] = val
-            if p.lower().startswith('costmplparent'):
-                cos['costmplparent'] = val
-            if p.lower().startswith('costmplcreateparent'):
-                cos['costmplcreateparent'] = val
-            if p.lower().startswith('costmplattr'):
-                cos['costmplattr'] = val
-            if p.lower().startswith('costmplpriority'):
-                cos['costmplpriority'] = val
+            if p.lower().startswith('cos_templatename'):
+                cos['cos_templatename'] = val
+            if p.lower().startswith('cos_templatenum'):
+                cos['cos_templatenum'] = val
+            if p.lower().startswith('cos_templateparent'):
+                cos['cos_templateparent'] = val
+            if p.lower().startswith('cos_templatecreateparent'):
+                cos['cos_templatecreateparent'] = val
+            if p.lower().startswith('cos_templateattr'):
+                cos['cos_templateattr'] = val
+            if p.lower().startswith('cos_templatepriority'):
+                cos['cos_templatepriority'] = val
             # definitions
-            if p.lower().startswith('cosdefname'):
-                cos['cosdefname'] = val
-            if p.lower().startswith('cosdefparent'):
-                cos['cosdefparent'] = val
-            if p.lower().startswith('cosdefcreateparent'):
-                cos['cosdefcreateparent'] = val
-            if p.lower().startswith('cosdefnum'):
-                cos['cosdefnum'] = val
+            if p.lower().startswith('cos_defname'):
+                cos['cos_defname'] = val
+            if p.lower().startswith('cos_defparent'):
+                cos['cos_defparent'] = val
+            if p.lower().startswith('cos_defcreateparent'):
+                cos['cos_defcreateparent'] = val
+            if p.lower().startswith('cos_defnum'):
+                cos['cos_defnum'] = val
             if p.lower().startswith('cosattr'):
                 cos['cosattr'] = val
             if p.lower().startswith('cosspecifier'):
@@ -2393,7 +2571,7 @@ def parseInfFile(infFile):
                 mods['template'] = val
             # mixed mods
             if p.lower().startswith('mixops'):
-                verifyYesNo(p, val)
+                verify_yes_no(p, val)
                 mods['mixops'] = val
             if p.lower().startswith('mixadds'):
                 mods['mix-adds'] = val
@@ -2409,10 +2587,10 @@ def parseInfFile(infFile):
                 mods['mix-random'] = val
             # specific mods
             if p.lower().startswith('createentries'):
-                verifyYesNo(p, val)
+                verify_yes_no(p, val)
                 mods['createentries'] = val
-            if p.lower().startswith('attrval'):
-                mods['attrval'] = val
+            if p.lower().startswith('attr_value'):
+                mods['attr_value'] = val
             if p.lower().startswith('modop'):
                 mods['modop'] = val
             if p.lower().startswith('modval'):
@@ -2490,7 +2668,7 @@ class IndentedHelpFormatterWithNL(IndentedHelpFormatter):
 #
 # handle control-C cleanly
 #
-def signalHandler(signal, frame):
+def signal_handler(signal, frame):
     print ('')
     exit(0)
 
@@ -2515,7 +2693,7 @@ def main():
     global padding
 
     # setup the control-C signal handler
-    signal.signal(signal.SIGINT, signalHandler)
+    signal.signal(signal.SIGINT, signal_handler)
 
     #
     # Read in the name files
@@ -2542,9 +2720,10 @@ def main():
     # Command line mode
     #########################################################
     if len(sys.argv) > 1:
-        actionObj = {}
-        actionObj['schema'] = []
-        actionObj['member_schema'] = []
+        action_obj = {
+            'schema': [],
+            'member_schema': []
+        }
 
         desc = ("""LDIF file generation tool (v""" + VERSION + """).  This script""" +
                      """ can be used to create a variety of custom LDIF files: from """ +
@@ -2568,7 +2747,7 @@ def main():
         parser.add_option('-v', '--verbose', help='Verbose output.', action='store_true', default=False, dest='verbose')
         parser.add_option('-o', '--outfile', help='The LDIF output file, (default "/tmp/out.ldif")', dest='file',
                                       default='/tmp/out.ldif')
-        parser.add_option('-a', '--action', help='Actions: create-user, create-group, create-ou, ' +
+        parser.add_option('-a', '--action', help='Actions: create-user, create-ipa-user, create-ipa-host, create-group, create-ou, ' +
                                       'create-role, create-cos, or create-mod (default "create-user")',
                                       dest='action', default='create-user')
         parser.add_option('-e', '--entryname', help='The name of the entry (omit this option to use "real names")',
@@ -2589,7 +2768,7 @@ def main():
                                       'RANDOM, RANDOM_PICK, and SEQ_SET are allowed', action="append", dest='schema')
         parser.add_option('-w', '--passwd', help='The password to use for user entries (default is the ' +
                                       'user\'s "uid" value)', dest='passwd', default='')
-        parser.add_option('-b', '--no-aci', help='Do not add any default aci\'s', dest='skipACI', action="store_true",
+        parser.add_option('-b', '--no-aci', help='Do not add any default aci\'s', dest='skip_aci', action="store_true",
                                        default=False)
         parser.add_option('-u', '--unnormal-dn', help='Uses unnormalized DN\'s', dest='unnormal', action="store_true",
                                        default=False)
@@ -2620,17 +2799,17 @@ def main():
                  'nestedrole=<DN of nested role>\n',
             action="append", dest='roleopts')
         parser.add_option('-j', '--cosopts',
-            help='costype=<classic, pointer, or indirect> \n' +
-                 'costmplname=<name of COS template>\n' +
-                 'costmplnum=<number of COS templates to create>\n' +
-                 'costmplparent=<DN of template\'s parent entry>\n' +
-                 'costmplcreateparent\n' +
-                 'costmplattr=<COS template "attribute: value" pair>\n' +
-                 'costmplpriority=<COS template priority>\n' +
-                 'cosdefname=<COS definition name>\n' +
-                 'cosdefnum=<number of COS defintions>\n' +
-                 'cosdefparent=<DN of COS definition\'s parent entry>\n' +
-                 'cosdefcreateparent\n' +
+            help='cos_type=<classic, pointer, or indirect> \n' +
+                 'cos_templatename=<name of COS template>\n' +
+                 'cos_templatenum=<number of COS templates to create>\n' +
+                 'cos_templateparent=<DN of template\'s parent entry>\n' +
+                 'cos_templatecreateparent\n' +
+                 'cos_templateattr=<COS template "attribute: value" pair>\n' +
+                 'cos_templatepriority=<COS template priority>\n' +
+                 'cos_defname=<COS definition name>\n' +
+                 'cos_defnum=<number of COS defintions>\n' +
+                 'cos_defparent=<DN of COS definition\'s parent entry>\n' +
+                 'cos_defcreateparent\n' +
                  'cosattr=<COS attribute>\n' +
                  'cosspecifier=<COS specifier>\n' +
                  'cosindirectspecifier=<COS indirect specifier>\n',
@@ -2657,180 +2836,182 @@ def main():
                 exit(0)
 
             # general options
-            actionObj['create_parent'] = args.createParent
-            actionObj['createorgchart'] = args.createorgchart
-            if not actionObj['create_parent'] and actionObj['createorgchart']:
-                actionObj['create_parent'] = True
-            actionObj['file'] = args.file
+            action_obj['create_parent'] = args.createParent
+            action_obj['createorgchart'] = args.createorgchart
+            if not action_obj['create_parent'] and action_obj['createorgchart']:
+                action_obj['create_parent'] = True
+            action_obj['file'] = args.file
             if args.template != '':
-                actionObj['template_file'] = args.template
-                readTemplate(actionObj, 0)
+                action_obj['template_file'] = args.template
+                read_template(action_obj, 0)
             verbose = args.verbose
             if args.schema:
-                actionObj['schema'] = args.schema
-            actionObj['name'] = args.name
-            actionObj['entries'] = args.numEntries
-            actionObj['suffix'] = args.suffix
+                action_obj['schema'] = args.schema
+            action_obj['name'] = args.name
+            action_obj['entries'] = args.numEntries
+            action_obj['suffix'] = args.suffix
             if args.parent == '':
-                actionObj['parent'] = args.suffix
+                action_obj['parent'] = args.suffix
             else:
-                actionObj['parent'] = args.parent
-            actionObj['rdn'] = args.rdn
-            actionObj['passwd'] = args.passwd
-            actionObj['skipaci'] = args.skipACI
-            actionObj['unnorm'] = args.unnormal
+                action_obj['parent'] = args.parent
+            action_obj['rdn'] = args.rdn
+            action_obj['passwd'] = args.passwd
+            action_obj['skip_aci'] = args.skip_aci
+            action_obj['unnorm'] = args.unnormal
             if args.entrysize.isdigit():
-                actionObj['size'] = int(args.entrysize)
+                action_obj['size'] = int(args.entrysize)
             else:
-                actionObj['size'] = 0
+                action_obj['size'] = 0
                 if verbose:
                     print ('Size (%s) is not a number, ignoring value...' % args.entrysize)
             if args.nopadding:
                 padding = False
 
-            LDIF = openLDIF(args.file)
+            LDIF = open_ldif(args.file)
 
             #
             # Create Users
             #
             if args.action == 'create-user':
-                writeUsers(LDIF, actionObj)
+                write_users(LDIF, action_obj)
                 print ('Done.')
 
             #
             # Create Organizational Units
             #
             elif args.action == 'create-ou':
-                writeOU(LDIF, actionObj)
+                write_ou(LDIF, action_obj)
 
             #
             # Create Groups
             #
             elif args.action == 'create-group':
-                actionObj['member_parent'] = args.parent
-                actionObj['create_members'] = False
-                actionObj['create_unique_members'] = False
-                actionObj['create_member_parent'] = False
+                action_obj['member_parent'] = args.parent
+                action_obj['create_members'] = False
+                action_obj['create_unique_members'] = False
+                action_obj['create_member_parent'] = False
 
                 for groupOpt in args.memberopts:
                     parts = groupOpt.split('=')
                     keyword = parts[0].lower().rstrip()
                     value = parts[1]
                     if keyword == 'template':
-                        actionObj['member_template_file'] = value
+                        action_obj['member_template_file'] = value
                     elif keyword == 'members':
-                        actionObj['members'] = value
+                        action_obj['members'] = value
                     elif keyword == 'memberattr':
-                        actionObj['member_attr'] = value
+                        action_obj['member_attr'] = value
                     elif keyword == 'createmembers':
-                        actionObj['create_members'] = True
+                        action_obj['create_members'] = True
                     elif keyword == 'createuniquemembers':
-                        actionObj['create_unique_members'] = True
+                        action_obj['create_unique_members'] = True
                     elif keyword == 'name':
-                        actionObj['member_name'] = value
+                        action_obj['member_name'] = value
                     elif keyword == 'parent':
-                        actionObj['member_parent'] = value
+                        action_obj['member_parent'] = value
                     elif keyword == 'createparent':
-                        actionObj['create_member_parent'] = True
+                        action_obj['create_member_parent'] = True
                     elif keyword == 'passwd':
-                        actionObj['member_passwd'] = args.password
+                        action_obj['member_passwd'] = args.password
                     elif keyword == 'rdn':
-                        actionObj['member_rdn'] = value
+                        action_obj['member_rdn'] = value
                     elif keyword == 'attr':
-                        actionObj['member_schema'].append(value)
-                writeGroup(LDIF, actionObj)
+                        action_obj['member_schema'].append(value)
+                write_group(LDIF, action_obj)
 
             #
             # Create Roles
             #
             elif args.action == 'create-role':
-                actionObj['role_type'] = 'managed'
-                actionObj['role_list'] = []
+                action_obj['role_type'] = 'managed'
+                action_obj['role_list'] = []
 
                 for roleOpt in args.roleopts:
                     parts = roleOpt.split('=')
                     keyword = parts[0].lower().rstrip()
                     value = parts[1].lstrip()
                     if keyword == 'rolefilter':
-                        actionObj['filter'] = value
+                        action_obj['filter'] = value
                     elif keyword == 'nestedrole':
-                        actionObj['role_list'].append(value)
+                        action_obj['role_list'].append(value)
                     elif keyword == 'roletype':
-                        actionObj['role_type'] = value
-                writeRole(LDIF, actionObj)
+                        action_obj['role_type'] = value
+                write_role(LDIF, action_obj)
 
             #
             # Create COS
             #
             elif args.action == 'create-cos':
-                cosType = 'classic'
-                cosTmpl = {}
-                cosDef = {}
-                cosTmpl['entries'] = '0'
-                cosDef['entries'] = '1'
-                cosDef['attr_list'] = []
-                cosTmpl['create_parent'] = False
-                cosDef['create_parent'] = False
+                cos_type = 'classic'
+                cos_def = {
+                    'entries': '1',
+                    'attr_list': [],
+                    'create_parent': False,
+                }
+                cos_template = {
+                    'entries': '0',
+                    'create_parent': False
+                }
 
                 for cosOpt in args.cosopts:
                     parts = cosOpt.split('=')
                     keyword = parts[0].lower().rstrip()
                     value = parts[1].lstrip()
-                    if keyword == 'cosType':
-                        cosType = value
-                    elif keyword == 'costmplname':
-                        cosTmpl['name'] = value
-                    elif keyword == 'costmplnum':
-                        cosTmpl['entries'] = value
-                    elif keyword == 'costmplparent':
-                        cosTmpl['parent'] = value
-                    elif keyword == 'costmplcreateparent':
-                        cosTmpl['create_parent'] = True
-                    elif keyword == 'costmplattr':
-                        cosTmpl['attr_list'].append(value)
-                    elif keyword == 'costmplpriority':
-                        cosTmpl['priority'] = value
-                    elif keyword == 'cosdefname':
-                        cosDef['name'] = value
-                    elif keyword == 'cosdefnum':
-                        cosDef['entries'] = value
-                    elif keyword == 'cosdefparent':
-                        cosDef['parent'] = value
-                    elif keyword == 'cosdefcreateparent':
-                        cosDef['create_parent'] = True
+                    if keyword == 'cos_type':
+                        cos_type = value
+                    elif keyword == 'cos_templatename':
+                        cos_template['name'] = value
+                    elif keyword == 'cos_templatenum':
+                        cos_template['entries'] = value
+                    elif keyword == 'cos_templateparent':
+                        cos_template['parent'] = value
+                    elif keyword == 'cos_templatecreateparent':
+                        cos_template['create_parent'] = True
+                    elif keyword == 'cos_templateattr':
+                        cos_template['attr_list'].append(value)
+                    elif keyword == 'cos_templatepriority':
+                        cos_template['priority'] = value
+                    elif keyword == 'cos_defname':
+                        cos_def['name'] = value
+                    elif keyword == 'cos_defnum':
+                        cos_def['entries'] = value
+                    elif keyword == 'cos_defparent':
+                        cos_def['parent'] = value
+                    elif keyword == 'cos_defcreateparent':
+                        cos_def['create_parent'] = True
                     elif keyword == 'cosattr':
-                        cosDef['attr_list'].append(value)
+                        cos_def['attr_list'].append(value)
                     elif keyword == 'cosspecifier':
-                        cosDef['cosSpecifier'] = value
+                        cos_def['cosSpecifier'] = value
                     elif keyword == 'cosindirectspecifier':
-                        cosDef['indirectSpecifier'] = value
-                writeCOS(LDIF, cosType, cosTmpl, cosDef)
+                        cos_def['indirectSpecifier'] = value
+                write_cos(LDIF, cos_type, cos_template, cos_def)
 
             #
             # Create Modification LDIF
             #
             elif args.action == 'create-mod':
-                actionObj['create_entries'] = False
-                actionObj['delete_entries'] = False
+                action_obj['create_entries'] = False
+                action_obj['delete_entries'] = False
 
                 for modOpt in args.modopts:
                     parts = modOpt.split('=')
                     keyword = parts[0].lower().rstrip()
                     value = parts[1].lstrip()
                     if keyword == 'modcreateentry':
-                        actionObj['create_entries'] = True
+                        action_obj['create_entries'] = True
                     elif keyword == 'modop':
-                        actionObj['mod_op'] = value
+                        action_obj['mod_op'] = value
                     elif keyword == 'modattr':
-                        actionObj['mod_attr'] = value
+                        action_obj['mod_attr'] = value
                     elif keyword == 'modvalue':
-                        actionObj['attr_val'] = value
+                        action_obj['attr_val'] = value
                     elif keyword == 'modcount':
-                        actionObj['mod_num'] = value
+                        action_obj['mod_num'] = value
                     elif keyword == 'moddeleteentry':
-                        actionObj['delete_entries'] = True
-                actionObj['passwd'] = args.passwd
-                writeMods(LDIF, actionObj)
+                        action_obj['delete_entries'] = True
+                action_obj['passwd'] = args.passwd
+                write_mods(LDIF, action_obj)
 
             #
             # Typo?  Invalid action
@@ -2847,17 +3028,19 @@ def main():
     print ('LDIF Generator (v' + VERSION + ')')
     print ('')
     print ('1.  Create Users')
-    print ('2.  Create Groups')
-    print ('3.  Create Organizational Units')
-    print ('4.  Create Managed Role')
-    print ('5.  Create Filtered Role')
-    print ('6.  Create Nested Role')
-    print ('7.  Create Classic COS')
-    print ('8.  Create Pointer COS')
-    print ('9.  Create Indirect COS')
-    print ('10. Create Modification LDIF')
-    print ('11. Create Bad LDIF')
-    print ('12. Create Nested LDIF')
+    print ('2.  Create IPA Users')
+    print ('3.  Create IPA Hosts')
+    print ('4.  Create Groups')
+    print ('5.  Create Organizational Units')
+    print ('6.  Create Managed Role')
+    print ('7.  Create Filtered Role')
+    print ('8.  Create Nested Role')
+    print ('9.  Create Classic COS')
+    print ('10.  Create Pointer COS')
+    print ('11.  Create Indirect COS')
+    print ('12. Create Modification LDIF')
+    print ('13. Create Bad LDIF')
+    print ('14. Create Nested LDIF')
     print ('')
 
     choice = input('Enter choice [1-12]: ')
@@ -2866,29 +3049,34 @@ def main():
 
     # Process the "decision"
     if choice == '1':
-        createUsers()
+        create_users()
     elif choice == '2':
-        createGroup()
+        create_ipa_users()
     elif choice == '3':
-        createOU()
+        create_ipa_hosts()
     elif choice == '4':
-        createRole('managed')
+        create_group()
     elif choice == '5':
-        createRole('filtered')
+        create_ou()
     elif choice == '6':
-        createRole('nested')
+        create_role('managed')
     elif choice == '7':
-        createCOS('classic')
+        create_role('filtered')
     elif choice == '8':
-        createCOS('pointer')
+        create_role('nested')
     elif choice == '9':
-        createCOS('indirect')
+        create_cos('classic')
     elif choice == '10':
-        createMods()
+        create_cos('pointer')
     elif choice == '11':
-        createBad()
+        create_cos('indirect')
     elif choice == '12':
-        createNestedLDIF()
+        create_mods()
+    elif choice == '13':
+        create_bad_ldif()
+    elif choice == '14':
+        create_nested_ldif()
+
     else:
         print ('Invalid choice: ' + choice + ', exiting...')
         exit(1)
